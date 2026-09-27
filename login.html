@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ / สมัครสมาชิก - EbookGenZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-tr from-cyan-50 via-sky-100 to-blue-100 text-slate-800 flex items-center justify-center min-h-screen px-4">
+
+    <div class="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl shadow-sky-500/10 border border-sky-100 w-full max-w-md relative overflow-hidden">
+        
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-black bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">⚡ EbookGenZ Portal</h1>
+            <p id="form-subtitle" class="text-xs text-slate-500 mt-1 font-medium">เข้าสู่ระบบเพื่อใช้งานหรือสมัครสมาชิกใหม่</p>
+        </div>
+
+        <!-- Tab Switcher -->
+        <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-6 border border-sky-100">
+            <button onclick="switchMode('login')" id="tab-login" class="flex-1 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-sky-400 to-blue-500 text-white transition shadow-md">เข้าสู่ระบบ</button>
+            <button onclick="switchMode('register')" id="tab-register" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition">สมัครสมาชิก</button>
+        </div>
+
+        <!-- Form Login -->
+        <div id="box-login" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อผู้ใช้งาน (Username)</label>
+                <input type="text" id="log-username" placeholder="เช่น customer หรือ admin" class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">รหัสผ่าน (Password)</label>
+                <input type="password" id="log-password" placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-sky-500/30 hover:opacity-90 transition">เข้าสู่ระบบ</button>
+        </div>
+
+        <!-- Form Register -->
+        <div id="box-register" class="space-y-4 hidden">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุลจริง</label>
+                <input type="text" id="reg-fullname" placeholder="ชื่อของคุณ..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อผู้ใช้งาน (Username)</label>
+                <input type="text" id="reg-username" placeholder="ตั้งยูสเซอร์เนม..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">รหัสผ่าน (Password)</label>
+                <input type="password" id="reg-password" placeholder="ตั้งรหัสผ่าน..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+            </div>
+            <button onclick="handleRegister()" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-sky-500/30 hover:opacity-90 transition">สมัครสมาชิก</button>
+        </div>
+
+        <!-- Account Info Box -->
+        <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-500 bg-sky-50/50 p-3.5 rounded-2xl border border-sky-100">
+            <p class="font-bold text-sky-600 mb-1">💡 บัญชีทดสอบด่วน:</p>
+            <p>• ลูกค้า: <code class="text-sky-600 font-bold">customer</code> / <code class="text-sky-600 font-bold">123</code></p>
+            <p>• แอดมิน: <code class="text-blue-600 font-bold">admin</code> / <code class="text-blue-600 font-bold">123</code></p>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="index.html" class="text-xs font-bold text-sky-600 hover:underline">← กลับสู่หน้าแรกหน้าร้าน</a>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        function switchMode(mode) {
+            const boxLogin = document.getElementById('box-login');
+            const boxReg = document.getElementById('box-register');
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+            const subtitle = document.getElementById('form-subtitle');
+
+            if(mode === 'login') {
+                boxLogin.classList.remove('hidden');
+                boxReg.classList.add('hidden');
+                tabLogin.className = "flex-1 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-sky-400 to-blue-500 text-white transition shadow-md";
+                tabReg.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition";
+                subtitle.innerText = "เข้าสู่ระบบเพื่อใช้งานระบบร้านค้า";
+            } else {
+                boxLogin.classList.add('hidden');
+                boxReg.classList.remove('hidden');
+                tabReg.className = "flex-1 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-sky-400 to-blue-500 text-white transition shadow-md";
+                tabLogin.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition";
+                subtitle.innerText = "สร้างบัญชีใหม่เพื่อเริ่มต้นใช้งาน";
+            }
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('log-username').value.trim();
+            const p = document.getElementById('log-password').value.trim();
+            const res = login(u, p);
+            if(res.success) {
+                alert(`ยินดีต้อนรับคุณ ${res.user.fullName} 🎉`);
+                window.location.href = res.user.role === 'admin' ? 'admin.html' : 'index.html';
+            } else {
+                alert(res.message);
+            }
+        }
+
+        function handleRegister() {
+            const name = document.getElementById('reg-fullname').value.trim();
+            const u = document.getElementById('reg-username').value.trim();
+            const p = document.getElementById('reg-password').value.trim();
+
+            if(!name || !u || !p) {
+                alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+                return;
+            }
+
+            const res = register(name, u, p);
+            if(res.success) {
+                alert('สมัครสมาชิกสำเร็จและเข้าสู่ระบบให้อัตโนมัติ! 🚀');
+                window.location.href = 'index.html';
+            } else {
+                alert(res.message);
+            }
+        }
+    </script>
+</body>
+</html>

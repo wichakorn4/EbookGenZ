@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EbookGenZ 🛠️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-tr from-cyan-50 via-sky-50 to-blue-50 text-slate-800 min-h-screen">
+
+    <!-- Navigation Bar -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-sky-100 sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="text-xl font-black tracking-wider text-slate-900">⚡ EbookGenZ <span class="text-xs bg-sky-100 text-sky-700 px-2.5 py-1 rounded-full font-black border border-sky-200">Admin Control</span></span>
+            </div>
+            <div class="flex items-center space-x-6 text-sm font-semibold">
+                <span id="admin-name" class="text-slate-500 font-medium"></span>
+                <a href="reports.html" class="text-sky-600 font-bold hover:underline">📊 รายงานวิเคราะห์</a>
+                <a href="index.html" class="text-slate-600 hover:text-sky-600 transition">กลับสู่หน้าร้านค้า</a>
+                <button onclick="logoutAdmin()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 px-3.5 py-1.5 rounded-xl border border-rose-200 transition font-black text-xs">ออกจากระบบ</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-6 py-10 max-w-6xl">
+        
+        <!-- Tab Navigation -->
+        <div class="flex space-x-4 mb-8 border-b border-sky-100 pb-4">
+            <button onclick="switchTab('orders')" id="btn-tab-orders" class="px-5 py-2.5 rounded-2xl font-black text-sm bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition">📦 จัดการคำสั่งซื้อ</button>
+            <button onclick="switchTab('ebooks')" id="btn-tab-ebooks" class="px-5 py-2.5 rounded-2xl font-bold text-sm text-slate-500 hover:text-slate-800 transition">📚 จัดการ E-Book (เพิ่ม/ลบ)</button>
+        </div>
+
+        <!-- TAB 1: จัดการคำสั่งซื้อ -->
+        <div id="section-orders" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-black text-slate-900">ตรวจสอบคำสั่งซื้อและสลิป</h2>
+                <button onclick="clearAllOrders()" class="bg-white text-rose-500 hover:bg-rose-50 px-4 py-2 rounded-2xl text-xs font-bold border border-rose-200 shadow-sm transition">ล้างข้อมูลออเดอร์ทั้งหมด</button>
+            </div>
+            <div class="bg-white/90 backdrop-blur rounded-3xl border border-sky-100 overflow-hidden shadow-xl shadow-sky-500/5">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-400 text-xs uppercase tracking-wider border-b border-sky-100 font-black">
+                            <th class="py-4 px-6">เลขออเดอร์ & วันที่</th>
+                            <th class="py-4 px-6">รายการสินค้า</th>
+                            <th class="py-4 px-6">ยอดชำระ</th>
+                            <th class="py-4 px-6">สถานะ</th>
+                            <th class="py-4 px-6 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-orders-list" class="divide-y divide-sky-100 text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: จัดการ E-Book (CRUD: เพิ่ม/ลบ) -->
+        <div id="section-ebooks" class="space-y-6 hidden">
+            <h2 class="text-2xl font-black text-slate-900">เพิ่มและจัดการ E-Book ในระบบ</h2>
+            
+            <!-- ฟอร์มเพิ่มหนังสือ -->
+            <div class="bg-white/90 backdrop-blur p-6 rounded-3xl border border-sky-100 shadow-xl shadow-sky-500/5">
+                <h3 class="text-lg font-black text-slate-900 mb-4">+ เพิ่มหนังสือเล่มใหม่</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อหนังสือ</label>
+                        <input type="text" id="new-title" placeholder="ชื่อหนังสือ..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ผู้แต่ง</label>
+                        <input type="text" id="new-author" placeholder="ชื่อผู้แต่ง..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ราคา (บาท)</label>
+                        <input type="number" id="new-price" placeholder="350" class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">หมวดหมู่</label>
+                        <select id="new-category" class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+                            <option value="programming">Programming & Tech</option>
+                            <option value="business">Business & Marketing</option>
+                            <option value="lifestyle">Lifestyle & Design</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ลิงก์ภาพปก (URL)</label>
+                        <input type="text" id="new-cover" placeholder="https://..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">คำอธิบายหนังสือ</label>
+                        <input type="text" id="new-desc" placeholder="รายละเอียด..." class="w-full px-4 py-3 bg-slate-50 border border-sky-200 rounded-2xl text-sm text-slate-800 focus:outline-none focus:border-sky-400">
+                    </div>
+                </div>
+                <button onclick="addNewEbook()" class="mt-4 bg-gradient-to-r from-sky-400 to-blue-500 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-sky-500/25 hover:opacity-90 transition">บันทึกเพิ่มหนังสือ 🚀</button>
+            </div>
+
+            <!-- ตารางรายการหนังสือ -->
+            <div class="bg-white/90 backdrop-blur rounded-3xl border border-sky-100 overflow-hidden shadow-xl shadow-sky-500/5">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-400 text-xs uppercase tracking-wider border-b border-sky-100 font-black">
+                            <th class="py-4 px-6">หนังสือ</th>
+                            <th class="py-4 px-6">หมวดหมู่</th>
+                            <th class="py-4 px-6">ราคา</th>
+                            <th class="py-4 px-6 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-ebooks-list" class="divide-y divide-sky-100 text-sm"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+        const user = getCurrentUser();
+        if (!user || user.role !== 'admin') {
+            alert('Access Denied: สำหรับผู้ดูแลระบบเท่านั้น');
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('admin-name').innerText = `ผู้ดูแลระบบ: ${user.fullName}`;
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('current_user_ebookgenz');
+            window.location.href = 'index.html';
+        }
+
+        function switchTab(tab) {
+            const secOrders = document.getElementById('section-orders');
+            const secEbooks = document.getElementById('section-ebooks');
+            const btnOrders = document.getElementById('btn-tab-orders');
+            const btnEbooks = document.getElementById('btn-tab-ebooks');
+
+            if(tab === 'orders') {
+                secOrders.classList.remove('hidden');
+                secEbooks.classList.add('hidden');
+                btnOrders.className = "px-5 py-2.5 rounded-2xl font-black text-sm bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition";
+                btnEbooks.className = "px-5 py-2.5 rounded-2xl font-bold text-sm text-slate-500 hover:text-slate-800 transition";
+            } else {
+                secOrders.classList.add('hidden');
+                secEbooks.classList.remove('hidden');
+                btnEbooks.className = "px-5 py-2.5 rounded-2xl font-black text-sm bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition";
+                btnOrders.className = "px-5 py-2.5 rounded-2xl font-bold text-sm text-slate-500 hover:text-slate-800 transition";
+                renderAdminEbooks();
+            }
+        }
+
+        // จัดการออเดอร์
+        function renderAdminOrders() {
+            const tbody = document.getElementById('admin-orders-list');
+            tbody.innerHTML = '';
+            const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+
+            if(orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 text-slate-400 font-medium">ไม่มีคำสั่งซื้อในระบบ</td></tr>`;
+                return;
+            }
+
+            orders.forEach((order, index) => {
+                let itemsList = '';
+                order.items.forEach(item => {
+                    itemsList += `<div class="text-xs text-slate-700 font-medium">• ${item.title} (x${item.quantity})</div>`;
+                });
+
+                let statusBadge = order.status === 'pending' ? '<span class="bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-black">⏳ รอตรวจสอบ</span>' :
+                                  order.status === 'confirmed' ? '<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black">✅ ยืนยันแล้ว</span>' :
+                                  '<span class="bg-rose-100 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-black">❌ ยกเลิก</span>';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-sky-50/50 transition">
+                        <td class="py-4 px-6"><span class="font-black text-slate-900">#${order.orderId}</span><div class="text-xs text-slate-400">${order.date}</div><div class="text-[11px] text-sky-600 font-bold">ลูกค้า: ${order.userName || 'ทั่วไป'}</div></td>
+                        <td class="py-4 px-6">${itemsList}</td>
+                        <td class="py-4 px-6 font-black text-sky-600">฿${order.total}</td>
+                        <td class="py-4 px-6">${statusBadge}</td>
+                        <td class="py-4 px-6 text-center space-x-2">
+                            <button onclick="updateOrderStatus(${index}, 'confirmed')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">ยืนยัน</button>
+                            <button onclick="updateOrderStatus(${index}, 'cancelled')" class="bg-rose-500 hover:bg-rose-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">ยกเลิก</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateOrderStatus(index, newStatus) {
+            const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+            orders[index].status = newStatus;
+            localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
+            renderAdminOrders();
+            alert(`เปลี่ยนสถานะออเดอร์ #${orders[index].orderId} เรียบร้อยแล้ว`);
+        }
+
+        function clearAllOrders() {
+            if(confirm('ต้องการล้างออเดอร์ทั้งหมดใช่หรือไม่?')) {
+                localStorage.removeItem('orders_ebookgenz');
+                renderAdminOrders();
+            }
+        }
+
+        // จัดการ E-Book (CRUD)
+        let ebooksList = JSON.parse(localStorage.getItem('ebooks_data_genz')) || [
+            { id: 1, title: "Clean Code ฉบับปรมาจารย์", author: "Robert C. Martin", price: 350, category: "programming", cover: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80", description: "เรียนรู้หลักการเขียนโค้ดให้สะอาด อ่านง่าย บำรุงรักษาง่าย และมีมาตรฐานระดับโปรแกรมเมอร์มืออาชีพ" },
+            { id: 2, title: "Java Object-Oriented Mastery", author: "Somchai Tech", price: 290, category: "programming", cover: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=500&q=80", description: "เจาะลึกหลักการเขียนโปรแกรมเชิงวัตถุ (OOP) ด้วยภาษา Java ตั้งแต่พื้นฐานจนถึงโปรเจกต์จริง" },
+            { id: 3, title: "LiftCode", author: "Ninja Shadow", price: 899, category: "programming", cover: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=500&q=80", description: "ยกระดับสกิลการเขียนโค้ดและการแก้โจทย์อัลกอริทึมขั้นเทพ สายคอนเทนต์สายเทคต้องมี" }
+        ];
+
+        function renderAdminEbooks() {
+            const tbody = document.getElementById('admin-ebooks-list');
+            tbody.innerHTML = '';
+
+            ebooksList.forEach((book, index) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-sky-50/50 transition">
+                        <td class="py-4 px-6 flex items-center space-x-4">
+                            <img src="${book.cover}" class="w-10 h-14 object-cover rounded-xl border border-sky-100 shadow-sm">
+                            <div><h4 class="font-black text-slate-900">${book.title}</h4><p class="text-xs text-slate-400 font-medium">ผู้แต่ง: ${book.author}</p></div>
+                        </td>
+                        <td class="py-4 px-6 text-xs text-sky-600 font-bold uppercase">${book.category}</td>
+                        <td class="py-4 px-6 font-black text-slate-900">฿${book.price}</td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick="deleteEbook(${index})" class="bg-rose-100 text-rose-600 hover:bg-rose-200 px-3.5 py-1.5 rounded-xl text-xs font-bold border border-rose-200 transition">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            localStorage.setItem('ebooks_data_genz', JSON.stringify(ebooksList));
+        }
+
+        function addNewEbook() {
+            const title = document.getElementById('new-title').value.trim();
+            const author = document.getElementById('new-author').value.trim();
+            const price = parseFloat(document.getElementById('new-price').value);
+            const category = document.getElementById('new-category').value;
+            const cover = document.getElementById('new-cover').value.trim() || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80';
+            const description = document.getElementById('new-desc').value.trim() || 'หนังสือดิจิทัลคุณภาพสูง เหมาะสำหรับศึกษาเรียนรู้และพัฒนาทักษะ อ่านง่าย จบไว';
+
+            if(!title || !author || isNaN(price)) {
+                alert('กรุณากรอกข้อมูลชื่อหนังสือ ผู้แต่ง และราคาให้ครบถ้วน');
+                return;
+            }
+
+            ebooksList.push({ id: Date.now(), title, author, price, category, cover, description });
+            renderAdminEbooks();
+            document.getElementById('new-title').value = '';
+            document.getElementById('new-author').value = '';
+            document.getElementById('new-price').value = '';
+            document.getElementById('new-cover').value = '';
+            document.getElementById('new-desc').value = '';
+            alert('เพิ่ม E-Book สำเร็จ! 🚀');
+        }
+
+        function deleteEbook(index) {
+            if(confirm('ต้องการลบหนังสือเล่มนี้ใช่หรือไม่?')) {
+                ebooksList.splice(index, 1);
+                renderAdminEbooks();
+            }
+        }
+
+        renderAdminOrders();
+    </script>
+</body>
+</html>

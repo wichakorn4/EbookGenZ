@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการ E-Book (Admin) - EbookGenZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navigation Bar -->
+    <header class="bg-gray-900 text-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="admin.html" class="text-2xl font-bold tracking-wider">🛠️ EbookGenZ Admin Panel</a>
+            <div class="flex items-center space-x-6">
+                <a href="admin.html" class="hover:text-indigo-300 font-medium">จัดการคำสั่งซื้อ</a>
+                <a href="admin_ebooks.html" class="text-indigo-400 font-medium underline">จัดการ E-Book</a>
+                <a href="index.html" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm transition">กลับสู่หน้าร้านค้า</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-6 py-10 max-w-6xl">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">📚 จัดการรายการ E-Book</h1>
+                <p class="text-gray-500 text-sm mt-1">เพิ่ม แก้ไข หรือปิดการขายหนังสือดิจิทัลในระบบ</p>
+            </div>
+        </div>
+
+        <!-- ฟอร์มเพิ่มหนังสือใหม่ -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-10">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">➕ เพิ่ม E-Book เล่มใหม่</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อหนังสือ</label>
+                    <input type="text" id="new-title" placeholder="ชื่อหนังสือ..." class="w-full px-3 py-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ผู้แต่ง</label>
+                    <input type="text" id="new-author" placeholder="ชื่อผู้แต่ง..." class="w-full px-3 py-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ราคา (บาท)</label>
+                    <input type="number" id="new-price" placeholder="350" class="w-full px-3 py-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่</label>
+                    <select id="new-category" class="w-full px-3 py-2 border rounded-xl bg-white text-sm">
+                        <option value="programming">Programming & Tech</option>
+                        <option value="business">Business & Marketing</option>
+                        <option value="lifestyle">Lifestyle & Design</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์ภาพปก (URL รูปภาพ)</label>
+                    <input type="text" id="new-cover" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์ไฟล์ดาวน์โหลด PDF</label>
+                    <input type="text" id="new-file" placeholder="files/sample.pdf" class="w-full px-3 py-2 border rounded-xl text-sm">
+                </div>
+            </div>
+            <button onclick="addNewEbook()" class="mt-4 bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition shadow">บันทึกเพิ่มหนังสือ</button>
+        </div>
+
+        <!-- ตารางแสดงรายการหนังสือทั้งหมด -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
+                            <th class="py-4 px-6">หนังสือ</th>
+                            <th class="py-4 px-6">หมวดหมู่</th>
+                            <th class="py-4 px-6">ราคา</th>
+                            <th class="py-4 px-6 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-ebooks-list" class="divide-y divide-gray-100 text-sm">
+                        <!-- รายการหนังสือจะถูกเรนเดอร์ผ่าน JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ข้อมูลตั้งต้นหรือดึงจาก localStorage
+        let ebooksList = JSON.parse(localStorage.getItem('ebooks_data_genz')) || [
+            { id: 1, title: "Clean Code ฉบับปรมาจารย์", author: "Robert C. Martin", price: 350, category: "programming", cover: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80", file: "sample1.pdf" },
+            { id: 2, title: "Java Object-Oriented Mastery", author: "Somchai Tech", price: 290, category: "programming", cover: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=500&q=80", file: "sample2.pdf" },
+            { id: 3, title: "Marketing Mix 4P & 4C สำหรับ SmoothHair", author: "GenZ Strategist", price: 199, category: "business", cover: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80", file: "sample3.pdf" },
+            { id: 4, title: "Gothic Streetwear Design Guide", author: "Dark Star Studio", price: 450, category: "lifestyle", cover: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=500&q=80", file: "sample4.pdf" },
+            { id: 5, title: "Database Architecture 3NF", author: "Data Pro", price: 320, category: "programming", cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80", file: "sample5.pdf" },
+            { id: 6, title: "Startup Financial Planning", author: "Ariya Money", price: 250, category: "business", cover: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=500&q=80", file: "sample6.pdf" }
+        ];
+
+        function renderAdminEbooks() {
+            const tbody = document.getElementById('admin-ebooks-list');
+            tbody.innerHTML = '';
+
+            ebooksList.forEach((book, index) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50/50">
+                        <td class="py-4 px-6 flex items-center space-x-4">
+                            <img src="${book.cover}" class="w-12 h-16 object-cover rounded-lg shadow-sm">
+                            <div>
+                                <h4 class="font-bold text-gray-900">${book.title}</h4>
+                                <p class="text-xs text-gray-500">ผู้แต่ง: ${book.author}</p>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 uppercase text-xs font-semibold text-indigo-600">${book.category}</td>
+                        <td class="py-4 px-6 font-bold text-gray-900">฿${book.price}</td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick="deleteEbook(${index})" class="bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded-lg text-xs font-medium transition">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            localStorage.setItem('ebooks_data_genz', JSON.stringify(ebooksList));
+        }
+
+        function addNewEbook() {
+            const title = document.getElementById('new-title').value.trim();
+            const author = document.getElementById('new-author').value.trim();
+            const price = parseFloat(document.getElementById('new-price').value);
+            const category = document.getElementById('new-category').value;
+            const cover = document.getElementById('new-cover').value.trim() || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80';
+            const file = document.getElementById('new-file').value.trim() || 'sample.pdf';
+
+            if(!title || !author || isNaN(price)) {
+                alert('กรุณากรอกข้อมูลชื่อหนังสือ ผู้แต่ง และราคาให้ครบถ้วน');
+                return;
+            }
+
+            const newBook = { id: Date.now(), title, author, price, category, cover, file };
+            ebooksList.push(newBook);
+            renderAdminEbooks();
+
+            // เคลียร์ฟอร์ม
+            document.getElementById('new-title').value = '';
+            document.getElementById('new-author').value = '';
+            document.getElementById('new-price').value = '';
+            document.getElementById('new-cover').value = '';
+            document.getElementById('new-file').value = '';
+
+            alert('เพิ่ม E-Book เล่มใหม่สำเร็จ!');
+        }
+
+        function deleteEbook(index) {
+            if(confirm('คุณต้องการลบหนังสือเล่มนี้ใช่หรือไม่?')) {
+                ebooksList.splice(index, 1);
+                renderAdminEbooks();
+            }
+        }
+
+        renderAdminEbooks();
+    </script>
+</body>
+</html>

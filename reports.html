@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายงานวิเคราะห์ข้อมูล - EbookGenZ 📊</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-tr from-cyan-50 via-sky-50 to-blue-50 text-slate-800 min-h-screen">
+
+    <!-- Navigation Bar -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-sky-100 sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-black tracking-wider bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent">⚡ EbookGenZ</a>
+            <div class="flex items-center space-x-5 text-sm font-semibold">
+                <a href="index.html" class="text-slate-600 hover:text-sky-600 transition">หน้าร้านค้า</a>
+                <a href="reports.html" class="text-sky-600 underline decoration-2 underline-offset-8 font-bold">รายงานวิเคราะห์</a>
+                <a href="admin.html" class="bg-sky-100 text-sky-700 hover:bg-sky-200 px-3.5 py-1.5 rounded-xl border border-sky-200 text-xs font-bold transition">🛠️ หลังบ้าน</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-6 py-10 max-w-5xl">
+        <div class="mb-8 text-center">
+            <span class="bg-sky-100 text-sky-600 border border-sky-200 text-xs px-4 py-1.5 rounded-full uppercase tracking-widest font-black shadow-sm">Database Analytics Dashboard</span>
+            <h1 class="text-3xl font-black text-slate-900 mt-3">📊 รายงานวิเคราะห์ข้อมูล</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">เลือกหัวข้อรายงานที่คุณต้องการตรวจสอบเชิงลึก</p>
+        </div>
+
+        <!-- 📑 Tab Navigation สำหรับกดสลับดูทีละรายงาน (ดูง่ายขึ้นเยอะ) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            <button onclick="switchReport(1)" id="tab-btn-1" class="p-4 rounded-2xl font-black text-xs bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition text-center">
+                📈 ยอดขายตามช่วงเวลา
+            </button>
+            <button onclick="switchReport(2)" id="tab-btn-2" class="p-4 rounded-2xl font-bold text-xs bg-white text-slate-600 border border-sky-100 hover:bg-sky-50 transition text-center">
+                🔥 E-Book ขายดี
+            </button>
+            <button onclick="switchReport(3)" id="tab-btn-3" class="p-4 rounded-2xl font-bold text-xs bg-white text-slate-600 border border-sky-100 hover:bg-sky-50 transition text-center">
+                📂 ยอดขายตามหมวดหมู่
+            </button>
+            <button onclick="switchReport(4)" id="tab-btn-4" class="p-4 rounded-2xl font-bold text-xs bg-white text-slate-600 border border-sky-100 hover:bg-sky-50 transition text-center">
+                👤 ลูกค้าและคำสั่งซื้อ
+            </button>
+        </div>
+
+        <!-- กล่องแสดงเนื้อหารายงาน (จะแสดงทีละรายงานตามแท็ที่กด) -->
+        <div class="bg-white/90 backdrop-blur border border-sky-100 rounded-3xl p-6 md:p-8 shadow-xl shadow-sky-500/5">
+            
+            <!-- รายงานที่ 1 -->
+            <div id="report-content-1" class="space-y-6">
+                <div class="flex justify-between items-center pb-4 border-b border-sky-100">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">📈 1. ยอดขายตามช่วงเวลา (Sales Over Time)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">แสดงยอดขายรวม จำนวนคำสั่งซื้อ และค่าเฉลี่ยต่อบิล จำแนกตามวันที่หรือเดือน</p>
+                    </div>
+                    <span class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full border border-sky-200 font-bold shrink-0">GROUP BY / SUM</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 border-b border-sky-100 font-black">
+                                <th class="p-3">วันที่ / ช่วงเวลา</th>
+                                <th class="p-3 text-center">จำนวนคำสั่งซื้อ</th>
+                                <th class="p-3 text-right">ยอดขายรวม (บาท)</th>
+                                <th class="p-3 text-right">ค่าเฉลี่ยต่อบิล (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-sky-100 font-medium">
+                            <tr>
+                                <td class="p-3 font-bold text-slate-900">2026-09-27</td>
+                                <td class="p-3 text-center">12 ออเดอร์</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿3,850</td>
+                                <td class="p-3 text-right">฿320.83</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold text-slate-900">2026-09-26</td>
+                                <td class="p-3 text-center">18 ออเดอร์</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿5,920</td>
+                                <td class="p-3 text-right">฿328.88</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-slate-900 text-sky-300 p-4 rounded-2xl border border-slate-800 text-[11px] font-mono overflow-x-auto shadow-inner">
+                    <p class="text-slate-400 mb-1">-- SQL Query:</p>
+                    SELECT DATE(created_at) AS sale_date, COUNT(order_id) AS total_orders, SUM(total_amount) AS total_sales, AVG(total_amount) AS avg_order_value FROM orders WHERE order_status = 'confirmed' GROUP BY DATE(created_at);
+                </div>
+            </div>
+
+            <!-- รายงานที่ 2 -->
+            <div id="report-content-2" class="space-y-6 hidden">
+                <div class="flex justify-between items-center pb-4 border-b border-sky-100">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">🔥 2. E-Book ขายดีสูงสุด (Top Best-Selling)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">จัดอันดับหนังสือดิจิทัลที่มียอดขายสูงสุดตามจำนวนเล่มและรายได้รวม</p>
+                    </div>
+                    <span class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full border border-sky-200 font-bold shrink-0">JOIN / LIMIT</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 border-b border-sky-100 font-black">
+                                <th class="p-3">อันดับ</th>
+                                <th class="p-3">ชื่อหนังสือ</th>
+                                <th class="p-3">ผู้แต่ง</th>
+                                <th class="p-3 text-center">ขายได้ (เล่ม)</th>
+                                <th class="p-3 text-right">รายได้รวม (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-sky-100 font-medium">
+                            <tr>
+                                <td class="p-3 font-black text-sky-600">#1</td>
+                                <td class="p-3 font-bold text-slate-900">Clean Code ฉบับปรมาจารย์</td>
+                                <td class="p-3 text-slate-500">Robert C. Martin</td>
+                                <td class="p-3 text-center">45 เล่ม</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿15,750</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-black text-blue-600">#2</td>
+                                <td class="p-3 font-bold text-slate-900">Java Object-Oriented Mastery</td>
+                                <td class="p-3 text-slate-500">Somchai Tech</td>
+                                <td class="p-3 text-center">32 เล่ม</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿9,280</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-slate-900 text-sky-300 p-4 rounded-2xl border border-slate-800 text-[11px] font-mono overflow-x-auto shadow-inner">
+                    <p class="text-slate-400 mb-1">-- SQL Query:</p>
+                    SELECT e.title, SUM(oi.quantity) AS total_sold, SUM(oi.price * oi.quantity) AS total_revenue FROM order_items oi JOIN ebooks e ON oi.ebook_id = e.ebook_id GROUP BY e.ebook_id ORDER BY total_sold DESC LIMIT 5;
+                </div>
+            </div>
+
+            <!-- รายงานที่ 3 -->
+            <div id="report-content-3" class="space-y-6 hidden">
+                <div class="flex justify-between items-center pb-4 border-b border-sky-100">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">📂 3. ยอดขายตามหมวดหมู่ (Sales by Category)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">วิเคราะห์ว่าหมวดหมู่หนังสือใดสร้างยอดขายสูงสุด</p>
+                    </div>
+                    <span class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full border border-sky-200 font-bold shrink-0">JOIN Multi-Tables</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 border-b border-sky-100 font-black">
+                                <th class="p-3">หมวดหมู่</th>
+                                <th class="p-3 text-center">จำนวนเล่มที่ขายได้</th>
+                                <th class="p-3 text-right">ยอดขายรวม (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-sky-100 font-medium">
+                            <tr>
+                                <td class="p-3 font-bold text-slate-900 uppercase">Programming & Tech</td>
+                                <td class="p-3 text-center">77 เล่ม</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿25,030</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold text-slate-900 uppercase">Business & Marketing</td>
+                                <td class="p-3 text-center">30 เล่ม</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿7,470</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-slate-900 text-sky-300 p-4 rounded-2xl border border-slate-800 text-[11px] font-mono overflow-x-auto shadow-inner">
+                    <p class="text-slate-400 mb-1">-- SQL Query:</p>
+                    SELECT c.category_name, SUM(oi.quantity) AS total_items, SUM(oi.price * oi.quantity) AS category_sales FROM order_items oi JOIN ebooks e ON oi.ebook_id = e.ebook_id JOIN categories c ON e.category_id = c.category_id GROUP BY c.category_id;
+                </div>
+            </div>
+
+            <!-- รายงานที่ 4 -->
+            <div id="report-content-4" class="space-y-6 hidden">
+                <div class="flex justify-between items-center pb-4 border-b border-sky-100">
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">👤 4. ลูกค้าและคำสั่งซื้อ (Customer Analysis)</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">วิเคราะห์ลูกค้ารายที่มียอดซื้อสะสมสูง</p>
+                    </div>
+                    <span class="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-full border border-sky-200 font-bold shrink-0">HAVING / COUNT</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 border-b border-sky-100 font-black">
+                                <th class="p-3">ชื่อลูกค้า</th>
+                                <th class="p-3 text-center">จำนวนออเดอร์</th>
+                                <th class="p-3 text-right">ยอดซื้อสะสม (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-sky-100 font-medium">
+                            <tr>
+                                <td class="p-3 font-bold text-slate-900">คุณลูกค้า ทดสอบระบบ</td>
+                                <td class="p-3 text-center">8 ออเดอร์</td>
+                                <td class="p-3 text-right text-sky-600 font-black">฿3,250</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-slate-900 text-sky-300 p-4 rounded-2xl border border-slate-800 text-[11px] font-mono overflow-x-auto shadow-inner">
+                    <p class="text-slate-400 mb-1">-- SQL Query:</p>
+                    SELECT u.full_name, COUNT(o.order_id) AS order_count, SUM(o.total_amount) AS total_spent FROM orders o JOIN users u ON o.user_id = u.user_id GROUP BY u.user_id HAVING SUM(o.total_amount) > 1000 ORDER BY total_spent DESC;
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        function switchReport(num) {
+            for(let i = 1; i <= 4; i++) {
+                const content = document.getElementById(`report-content-${i}`);
+                const btn = document.getElementById(`tab-btn-${i}`);
+                if(i === num) {
+                    content.classList.remove('hidden');
+                    btn.className = "p-4 rounded-2xl font-black text-xs bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition text-center";
+                } else {
+                    content.classList.add('hidden');
+                    btn.className = "p-4 rounded-2xl font-bold text-xs bg-white text-slate-600 border border-sky-100 hover:bg-sky-50 transition text-center";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คลังดาวน์โหลดของฉัน - EbookGenZ 📥</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-gradient-to-tr from-cyan-50 via-sky-50 to-blue-50 text-slate-800 min-h-screen">
+
+    <!-- Navigation Bar -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-sky-100 sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-black tracking-wider bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent">⚡ EbookGenZ</a>
+            <div class="flex items-center space-x-5 text-sm font-semibold">
+                <a href="index.html" class="text-slate-600 hover:text-sky-600 transition">หน้าร้านค้า</a>
+                <a href="downloads.html" class="text-sky-600 underline decoration-2 underline-offset-8">ประวัติการซื้อ</a>
+                <span id="admin-link-container"></span>
+                <a href="cart.html" class="relative bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl shadow-md shadow-sky-500/20 flex items-center space-x-2">
+                    <span>🛒 ตะกร้า</span>
+                    <span id="cart-count" class="bg-yellow-300 text-slate-900 text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">0</span>
+                </a>
+                <div id="nav-auth-section" class="border-l border-slate-200 pl-4"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto px-6 py-10 max-w-4xl">
+        <div class="mb-8">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">📥 คลังอีบุ๊กของคุณ</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">ดาวน์โหลดหนังสือดิจิทัลเฉพาะรายการที่ได้รับการยืนยันการชำระเงินแล้วเท่านั้น</p>
+        </div>
+
+        <div id="downloads-container" class="space-y-6"></div>
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+            alert('กรุณาเข้าสู่ระบบก่อนเข้าถึงประวัติการซื้อของคุณ');
+            window.location.href = 'login.html';
+        } else {
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-link-container').innerHTML = `<a href="reports.html" class="text-sky-600 font-bold hover:underline mr-3">📊 รายงาน</a><a href="admin.html" class="bg-sky-100 text-sky-700 hover:bg-sky-200 px-3 py-1.5 rounded-xl border border-sky-200 text-xs font-bold transition">🛠️ แอดมิน</a>`;
+            }
+        }
+
+        const cart = getUserCart();
+        document.getElementById('cart-count').innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+        function renderDownloads() {
+            const container = document.getElementById('downloads-container');
+            container.innerHTML = '';
+            const allOrders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+            
+            // กรองดูเฉพาะออเดอร์ของ User คนนี้
+            const orders = allOrders.filter(o => o.userId === currentUser.id);
+
+            if(orders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 bg-white/60 backdrop-blur border border-sky-100 rounded-3xl shadow-sm">
+                        <p class="text-slate-500 mb-4 font-medium">ยังไม่มีประวัติคำสั่งซื้อหนังสือในระบบของคุณ</p>
+                        <a href="index.html" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-sky-500/20 inline-block transition">ไปเลือกซื้อ E-Book กันเลย 🚀</a>
+                    </div>
+                `;
+                return;
+            }
+
+            orders.forEach(order => {
+                let statusBadge = order.status === 'pending' ? '<span class="bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-black">⏳ รอตรวจสอบสลิป</span>' :
+                                  order.status === 'confirmed' ? '<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black">✅ พร้อมดาวน์โหลด</span>' :
+                                  '<span class="bg-rose-100 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-black">❌ ยกเลิก</span>';
+
+                let itemsHtml = '';
+                order.items.forEach(item => {
+                    let downloadAction = order.status === 'confirmed' ? 
+                        `<div class="flex items-center space-x-2">
+                            <button onclick="openReader('${item.title}')" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 hover:opacity-90 transition">📖 อ่านออนไลน์</button>
+                            <a href="#" onclick="alert('กำลังดาวน์โหลดไฟล์: ${item.title} 📥')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-2xl text-xs font-bold transition">PDF</a>
+                         </div>` :
+                        `<span class="text-slate-400 text-xs bg-slate-100 px-3 py-2 rounded-2xl font-bold">🔒 ล็อกดาวน์โหลด</span>`;
+
+                    itemsHtml += `
+                        <div class="flex items-center justify-between py-3 border-b border-sky-100/60 last:border-0">
+                            <div class="flex items-center space-x-4">
+                                <img src="${item.cover}" class="w-12 h-16 object-cover rounded-2xl border border-sky-100 shadow-sm">
+                                <div>
+                                    <h4 class="font-black text-slate-900 text-sm">${item.title}</h4>
+                                    <p class="text-xs text-slate-500 font-medium">฿${item.price} (x${item.quantity})</p>
+                                </div>
+                            </div>
+                            <div>${downloadAction}</div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white/90 backdrop-blur border border-sky-100 rounded-3xl p-6 shadow-xl shadow-sky-500/5">
+                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-sky-100">
+                            <div>
+                                <span class="text-xs font-black text-sky-600">ออเดอร์ #${order.orderId}</span>
+                                <p class="text-[11px] text-slate-400 font-medium">${order.date}</p>
+                            </div>
+                            <div>${statusBadge}</div>
+                        </div>
+                        <div class="space-y-2">${itemsHtml}</div>
+                        <div class="mt-4 pt-3 border-t border-sky-100 flex justify-between text-sm font-black">
+                            <span class="text-slate-500">ยอดชำระสุทธิ (${order.method})</span>
+                            <span class="text-sky-600 text-base">฿${order.total}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        renderDownloads();
+        updateNavbarAuth();
+
+        // 📖 ฟังก์ชันควบคุม E-Reader อ่านออนไลน์
+        let currentPage = 1;
+        const totalPages = 3;
+        let currentBookTitle = "";
+
+        function openReader(title) {
+            currentBookTitle = title;
+            currentPage = 1;
+            document.getElementById('reader-title').innerText = title;
+            updateReaderContent();
+            
+            const modal = document.getElementById('reader-modal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeReader() {
+            document.getElementById('reader-modal').classList.add('hidden');
+        }
+
+        function updateReaderContent() {
+            const contentBox = document.getElementById('reader-content');
+            document.getElementById('page-indicator').innerText = `หน้าที่ ${currentPage} / ${totalPages}`;
+
+            if(currentPage === 1) {
+                contentBox.innerHTML = `
+                    <h2 class="text-xl font-black text-slate-900 mb-2">บทนำ: ทำความรู้จักกับ ${currentBookTitle}</h2>
+                    <p>ยินดีต้อนรับเข้าสู่เนื้อหาดิจิทัลฉบับสมบูรณ์ หนังสือเล่มนี้ถูกออกแบบมาเพื่อให้ผู้อ่านสามารถทำความเข้าใจเนื้อหาได้อย่างรวดเร็ว เจาะลึก และสามารถนำไปปรับใช้ได้จริงในการทำงานหรือโปรเจกต์ของคุณเอง</p>
+                    <p class="text-xs text-sky-600 font-bold bg-sky-50 p-4 rounded-2xl border border-sky-100">💡 Tip: คุณสามารถคลิกปุ่ม 'หน้าถัดไป' ด้านล่างเพื่ออ่านเนื้อหาบทเรียนถัดไปได้ทันที</p>
+                `;
+            } else if(currentPage === 2) {
+                contentBox.innerHTML = `
+                    <h2 class="text-xl font-black text-slate-900 mb-2">บทที่ 1: หลักการพื้นฐานและแนวคิดสำคัญ</h2>
+                    <p>ในบทนี้เราจะมาพูดถึงแก่นสำคัญของการพัฒนาทักษะ การเขียนโค้ด หรือการจัดการระบบให้มีประสิทธิภาพสูงสุด การวางโครงสร้างที่ดีตั้งแต่เริ่มต้นจะช่วยลดปัญหาในอนาคตได้อย่างมหาศาล</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-700 font-medium pl-2">
+                        <li>วิเคราะห์โจทย์และออกแบบโครงสร้างให้รอบคอบ</li>
+                        <li>ยึดถือมาตรฐาน Clean Code และสถาปัตยกรรมที่เข้าใจง่าย</li>
+                        <li>ทดสอบระบบอย่างสม่ำเสมอเพื่อความสมบูรณ์</li>
+                    </ul>
+                `;
+            } else {
+                contentBox.innerHTML = `
+                    <h2 class="text-xl font-black text-slate-900 mb-2">บทสรุปส่งท้าย (Conclusion)</h2>
+                    <p>หวังเป็นอย่างยิ่งว่าหนังสือ <strong>${currentBookTitle}</strong> เล่มนี้จะช่วยจุดประกายไอเดียและยกระดับศักยภาพของคุณให้ก้าวไปอีกขั้น ขอให้สนุกกับการศึกษาเรียนรู้และสร้างสรรค์ผลงานชิ้นเอกของคุณต่อไป! 🚀</p>
+                `;
+            }
+            contentBox.scrollTop = 0;
+        }
+
+        function nextPage() {
+            if(currentPage < totalPages) {
+                currentPage++;
+                updateReaderContent();
+            }
+        }
+
+        function prevPage() {
+            if(currentPage > 1) {
+                currentPage--;
+                updateReaderContent();
+            }
+        }
+    </script>
+    <!-- 📖 E-Reader Modal สำหรับอ่านหนังสือออนไลน์ -->
+<div id="reader-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white border border-sky-100 rounded-3xl max-w-2xl w-full h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+        
+        <!-- แถบหัวข้อ Reader -->
+        <div class="bg-slate-50 border-b border-sky-100 px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-xl">📖</span>
+                <div>
+                    <h3 id="reader-title" class="font-black text-slate-900 text-sm">ชื่อหนังสือ</h3>
+                    <p class="text-[11px] text-sky-600 font-bold">EbookGenZ Online Reader</p>
+                </div>
+            </div>
+            <button onclick="closeReader()" class="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">✕</button>
+        </div>
+
+        <!-- เนื้อหาจำลองภายในหนังสือ (จำลองหน้ากระดาษ) -->
+        <div id="reader-content" class="flex-1 p-8 overflow-y-auto bg-amber-50/30 text-slate-800 text-sm leading-relaxed space-y-4 font-medium">
+            <!-- เนื้อหาจะถูกเติมด้วย JavaScript -->
+        </div>
+
+        <!-- แถบควบคุมเปลี่ยนหน้า -->
+        <div class="bg-white border-t border-sky-100 px-6 py-3 flex items-center justify-between text-xs font-bold text-slate-600">
+            <button onclick="prevPage()" class="bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition">← หน้าก่อนหน้า</button>
+            <span id="page-indicator">หน้าที่ 1 / 3</span>
+            <button onclick="nextPage()" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-xl shadow-md shadow-sky-500/20 transition">หน้าถัดไป →</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
