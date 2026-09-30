@@ -69,13 +69,19 @@
             <div class="flex items-center space-x-5 text-sm font-semibold">
                 <a href="index.html" class="text-sky-600 underline decoration-2 underline-offset-8">หน้าร้านค้า</a>
                 <a href="downloads.html" class="text-slate-600 hover:text-sky-600 transition">ประวัติการซื้อ</a>
+                <a href="profile.html" class="text-xs font-bold text-slate-600 hover:text-sky-600 transition">ตั้งค่าโปรไฟล์</a>
                 <span id="admin-link-container"></span>
                 <a href="cart.html" class="relative bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl shadow-md shadow-sky-500/20 hover:opacity-90 flex items-center space-x-2">
                     <span>🛒 ตะกร้า</span>
                     <span id="cart-count" class="bg-yellow-300 text-slate-900 text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">0</span>
                 </a>
-                <div id="nav-auth-section" class="border-l border-slate-200 pl-4"></div>
-            </div>
+                <div id="nav-auth-section" class="border-l border-slate-200 pl-4 flex items-center space-x-3">
+    <!-- 👤 ย้ายปุ่มโปรไฟล์มาไว้ข้างในนี้ เพื่อให้ระบบแสดงผลร่วมกันได้ -->
+    <a href="profile.html" class="flex items-center space-x-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-2xl font-bold text-xs transition shadow-sm border border-indigo-100">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        <span id="user-display-name">ผู้ใช้งาน</span>
+    </a>
+</div>
         </div>
     </header>
 
@@ -135,26 +141,31 @@
 
     <script src="auth.js"></script>
     <script>
-        // ทำให้หน้าเว็บแสดงอนิเมชั่นเลื่อนขึ้นมาทันทีที่โหลดเสร็จ
-        window.addEventListener("DOMContentLoaded", () => {
-            document.body.classList.add('loaded');
-        });
-
-        // อนิเมชั่นเวลากดคลิกลิงก์เปลี่ยนไปหน้าอื่น ให้สไลด์เฟดออกก่อน
-        document.addEventListener("click", function(e) {
-            const link = e.target.closest("a");
-            if (link && link.href && link.target !== "_blank" && link.hostname === window.location.hostname) {
-                if (!link.getAttribute('onclick') && !link.hash) {
-                    e.preventDefault();
-                    document.body.style.opacity = "0";
-                    document.body.style.transform = "translateY(-15px)";
-                    setTimeout(() => {
-                        window.location.href = link.href;
-                    }, 300);
+        // ⚡ บังคับอัปเดตชื่อผู้ใช้จาก localStorage มาแสดงที่ปุ่มมุมขวาบนทันที
+    window.addEventListener('DOMContentLoaded', () => {
+        try {
+            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+            let currentUser = null;
+            
+            for (let key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    currentUser = JSON.parse(data);
+                    break;
                 }
             }
-        });
 
+            const nameEl = document.getElementById('user-display-name');
+            if (nameEl && currentUser) {
+                const actualName = currentUser.fullName || currentUser.name || currentUser.username;
+                if (actualName) {
+                    nameEl.textContent = actualName;
+                }
+            }
+        } catch (e) {
+            console.log('Error updating name:', e);
+        }
+    });
         // รองรับเวลากดปุ่ม Back / Forward ของเบราว์เซอร์
         window.addEventListener("pageshow", function(event) {
             if (event.persisted) {
@@ -355,6 +366,52 @@ function toggleSupportModal() {
         }, 300);
     }
 }
+
+    // 🚀 บังคับเปลี่ยนชื่อและดักรออัปเดตชื่อล่าสุดจากหน้าตั้งค่าโปรไฟล์แบบเรียลไทม์
+    function updateNavbarUsername() {
+        try {
+            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+            let currentUser = null;
+            
+            for (let key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    currentUser = JSON.parse(data);
+                    break;
+                }
+            }
+
+            if (currentUser) {
+                const actualName = currentUser.fullName || currentUser.name || currentUser.username;
+                if (actualName) {
+                    // 1. เปลี่ยนชื่อใน element ที่เราเตรียมไว้
+                    const nameEl = document.getElementById('user-display-name');
+                    if (nameEl) nameEl.textContent = actualName;
+
+                    // 2. ถ้ามีสคริปต์ตัวอื่นมาทับ ให้หาตัวอักษร "Test Vers" ใน nav แล้วบังคับเปลี่ยนทับทันที
+                    const navAuthSection = document.getElementById('nav-auth-section');
+                    if (navAuthSection) {
+                        // ค้นหาทุกแท็กข้อความข้างในแล้วเปลี่ยนถ้าเจอชื่อเก่า
+                        const walker = document.createTreeWalker(navAuthSection, NodeFilter.SHOW_TEXT, null, false);
+                        let node;
+                        while (node = walker.nextNode()) {
+                            if (node.nodeValue.includes('Test Vers')) {
+                                node.nodeValue = node.nodeValue.replace(/Test Vers.*/g, actualName + ' (customer)');
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    // รันทันทีเมื่อโหลดเสร็จ และดักรอเผื่อสคริปต์อื่นโหลดช้า
+    window.addEventListener('DOMContentLoaded', updateNavbarUsername);
+    setTimeout(updateNavbarUsername, 200);
+    setTimeout(updateNavbarUsername, 600);
+
     </script>
     <!-- 💬 ปุ่ม Support ลอยมุมขวาล่าง -->
 <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -397,5 +454,31 @@ function toggleSupportModal() {
         <span>💬 Support</span>
     </button>
 </div>
+<script>
+    // 🔄 ดึงชื่อผู้ใช้ล่าสุดจาก localStorage มาแสดงที่ปุ่มมุมขวาบนอัตโนมัติ
+    document.addEventListener('DOMContentLoaded', () => {
+        const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+        let currentUser = null;
+        
+        for (let key of keys) {
+            const data = localStorage.getItem(key);
+            if (data) {
+                try {
+                    currentUser = JSON.parse(data);
+                    break;
+                } catch (e) {}
+            }
+        }
+
+        const nameEl = document.getElementById('user-display-name');
+        if (nameEl) {
+            if (currentUser) {
+                nameEl.textContent = currentUser.fullName || currentUser.name || currentUser.username || 'ผู้ใช้งาน';
+            } else {
+                nameEl.textContent = 'ผู้เยี่ยมชม';
+            }
+        }
+    });
+</script>
 </body>
 </html>

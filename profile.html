@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตั้งค่าข้อมูลส่วนตัว - EbookGenZ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-tr from-cyan-50 via-sky-50 to-blue-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- 🌐 Navbar ด้านบน -->
+    <nav class="bg-white/85 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl font-extrabold bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">EbookGenZ</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="index.html" class="text-xs font-bold text-slate-600 hover:text-sky-600 transition">หน้าหลักร้านค้า</a>
+            <a href="downloads.html" class="text-xs font-bold text-slate-600 hover:text-sky-600 transition">คลังอีบุ๊กของฉัน</a>
+        </div>
+    </nav>
+
+    <!-- ⚙️ ฟอร์มแก้ไขข้อมูลส่วนตัว -->
+    <main class="container mx-auto px-4 py-12 flex justify-center items-center flex-grow">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 relative">
+            <h2 class="text-xl font-black text-slate-900 mb-2">⚙️ ตั้งค่าข้อมูลส่วนตัว</h2>
+            <p class="text-xs text-slate-400 mb-6">คุณสามารถแก้ไขชื่อ หรืออีเมลของคุณได้ที่นี่</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อ-นามสกุล</label>
+                    <input type="text" id="edit-fullname" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-sky-500 transition">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">อีเมล</label>
+                    <input type="email" id="edit-email" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:border-sky-500 transition">
+                </div>
+
+                <button onclick="updateUserProfile()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl hover:bg-slate-800 transition text-xs shadow-lg shadow-slate-900/10">
+                    บันทึกการเปลี่ยนแปลง ✨
+                </button>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- 📜 โค้ด JavaScript จัดการข้อมูล -->
+    <script>
+        // 🔍 ฟังก์ชันดึงข้อมูลผู้ใช้จาก localStorage (ถ้ายังไม่มี ให้สร้างข้อมูลจำลองขึ้นมาให้อัตโนมัติทันที)
+        function getActiveUser() {
+            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+            for (let key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        return JSON.parse(data);
+                    } catch (e) {}
+                }
+            }
+            
+            // 💡 ถ้าเช็คแล้วยังไม่มีใครล็อกอินเลย สร้าง User จำลองให้ทันที จะได้ไม่ต้องไปกด Console
+            const defaultUser = {
+                id: "user_default_01",
+                fullName: "Test01",
+                email: "test01@gmail.com"
+            };
+            localStorage.setItem('currentUser', JSON.stringify(defaultUser));
+            return defaultUser;
+        }
+
+        // โหลดข้อมูลผู้ใช้ปัจจุบันมาใส่ในฟอร์มทันทีที่เปิดหน้าเว็บ
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = getActiveUser();
+            
+            if (currentUser) {
+                document.getElementById('edit-fullname').value = currentUser.fullName || currentUser.name || currentUser.username || '';
+                document.getElementById('edit-email').value = currentUser.email || '';
+            }
+        });
+
+       // 💾 ฟังก์ชันกดบันทึกข้อมูลที่แก้ไข
+function updateUserProfile() {
+    const newFullName = document.getElementById('edit-fullname').value.trim();
+    const newEmail = document.getElementById('edit-email').value.trim();
+
+    if (!newFullName || !newEmail) {
+        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+    }
+
+    // 1. ดึงข้อมูลผู้ใช้ปัจจุบันหรือสร้างขึ้นมาใหม่ถ้ายังไม่มี
+    let currentUser = getActiveUser() || { id: "user_default_01" };
+    
+    // อัปเดตค่าใหม่
+    currentUser.fullName = newFullName;
+    currentUser.name = newFullName; // เผื่อระบบใช้คีย์ name
+    currentUser.email = newEmail;
+
+    // 2. บันทึกทับลงทุกคีย์ที่เป็นไปได้ใน localStorage เพื่อความชัวร์ไม่ให้ข้อมูลตีกัน
+    const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+    keys.forEach(key => {
+        if (localStorage.getItem(key)) {
+            localStorage.setItem(key, JSON.stringify(currentUser));
+        }
+    });
+    // บังคับเซ็ตลง currentUser ด้วยเสมอ
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+    // 3. อัปเดตรายชื่อในฐานข้อมูลรวมของผู้ใช้ทั้งหมด (users_ebookgenz)
+    const users = JSON.parse(localStorage.getItem('users_ebookgenz')) || [];
+    const index = users.findIndex(u => u.id === currentUser.id || u.email === currentUser.email);
+    if (index !== -1) {
+        users[index].fullName = newFullName;
+        users[index].name = newFullName;
+        users[index].email = newEmail;
+        localStorage.setItem('users_ebookgenz', JSON.stringify(users));
+    } else {
+        users.push(currentUser);
+        localStorage.setItem('users_ebookgenz', JSON.stringify(users));
+    }
+
+    alert('บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว!');
+    window.location.href = 'index.html'; // พาผู้ใช้กลับหน้าหลัก
+}
+    </script>
+    </script>
+</body>
+</html>
