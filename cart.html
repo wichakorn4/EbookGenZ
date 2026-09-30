@@ -154,35 +154,63 @@
         }
 
         function checkout() {
-            const user = getCurrentUser();
-            if(!user) {
-                alert('กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ');
-                window.location.href = 'login.html';
-                return;
-            }
-            if(cart.length === 0) {
-                alert('กรุณาเลือกสินค้าในตะกร้าก่อนทำการสั่งซื้อ');
-                return;
-            }
+    // 1. ตรวจสอบการเข้าสู่ระบบ
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    if (!user) {
+        alert('กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    // 2. ตรวจสอบสินค้าในตะกร้า
+    if (!cart || cart.length === 0) {
+        alert('กรุณาเลือกสินค้าในตะกร้าก่อนทำการสั่งซื้อ');
+        return;
+    }
 
+    // 3. ค้นหาช่องอัปโหลดไฟล์สลิปในหน้าเว็บ
+    const fileInput = document.querySelector('input[type="file"]');
 
-            const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
-            orders.push({
-                orderId: Date.now(),
-                userId: user.id,
-                userName: user.fullName,
-                items: cart,
-                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-                method: document.getElementById('payment-method').value,
-                status: 'pending',
-                date: new Date().toLocaleString()
-            });
+    // ฟังก์ชันบันทึกข้อมูลออเดอร์ลง localStorage
+    const processSave = (slipBase64) => {
+        const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+        
+        orders.push({
+            orderId: Date.now(),
+            userId: user.id || 'guest',
+            userName: user.fullName || 'ทั่วไป',
+            items: cart,
+            total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            method: document.getElementById('payment-method') ? document.getElementById('payment-method').value : 'QR Code',
+            status: 'pending',
+            date: new Date().toLocaleString(),
+            slipImage: slipBase64 // บันทึกรูปสลิปจริงของผู้ใช้
+        });
 
-            localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
-            saveUserCart([]); // ล้างตะกร้าของเจ้านี้
-            alert('สั่งซื้อสำเร็จ! รอผู้ดูแลระบบตรวจสอบสลิป 📦');
-            window.location.href = 'downloads.html';
+        localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
+        
+        // เคลียร์ตะกร้าสินค้า
+        if (typeof saveUserCart === 'function') {
+            saveUserCart([]);
+        } else {
+            localStorage.removeItem('cart');
         }
+
+        alert('สั่งซื้อสำเร็จ! รอผู้ดูแลระบบตรวจสอบสลิป');
+        window.location.href = 'downloads.html';
+    };
+
+    // 4. ถ้ามีการแนบไฟล์สลิป ให้แปลงไฟล์เป็นรูปภาพก่อนบันทึก
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            processSave(e.target.result);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    } else {
+        processSave("");
+    }
+}
 
         // 🔄 ควบคุมการแสดง QR Code และบัญชีธนาคาร (วางไว้นอกฟังก์ชันใดๆ)
 const paymentSelect = document.getElementById('payment-method');
