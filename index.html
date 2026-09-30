@@ -1,106 +1,135 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EbookGenZ - GenZ Digital Library 🚀</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-   <style>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-    body { 
-        font-family: 'Prompt', sans-serif; 
-        opacity: 0;
-        transform: translateY(15px);
-        transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    body.loaded {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    button, a.btn-anim {
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    button:hover, a.btn-anim:hover {
-        transform: translateY(-2px) scale(1.03);
-    }
-    button:active, a.btn-anim:active {
-        transform: translateY(1px) scale(0.96);
-    }
+        body.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-    /* 🌟 อนิเมชั่นเปิด-ปิด Modal แบบเด้งดึ๋งสมูท (Bounce In) */
-    #book-modal {
-        transition: opacity 0.3s ease;
-    }
-    #book-modal > div {
-        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-        transform: scale(0.8) translateY(30px);
-        opacity: 0;
-    }
-    #book-modal:not(.hidden) > div {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-    }
+        button,
+        a.btn-anim {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-    /* 📚 ปรับขนาดปกหนังสือให้เล็กลง กะทัดรัด */
-    .book-cover-container {
-        perspective: 1000px;
-    }
-    .book-cover-img {
-        aspect-ratio: 3 / 4;
-        object-fit: cover;
-        border-radius: 0.75rem 1rem 1rem 0.75rem;
-        box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.1), inset 3px 0 8px rgba(255, 255, 255, 0.3);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .group:hover .book-cover-img {
-        transform: translateY(-4px) rotateY(-4deg) scale(1.02);
-        box-shadow: -8px 8px 18px rgba(0, 0, 0, 0.15);
-    }
-    
-</style>
+        button:hover,
+        a.btn-anim:hover {
+            transform: translateY(-2px) scale(1.03);
+        }
+
+        button:active,
+        a.btn-anim:active {
+            transform: translateY(1px) scale(0.96);
+        }
+
+        /* 🌟 อนิเมชั่นเปิด-ปิด Modal แบบเด้งดึ๋งสมูท (Bounce In) */
+        #book-modal {
+            transition: opacity 0.3s ease;
+        }
+
+        #book-modal>div {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+            transform: scale(0.8) translateY(30px);
+            opacity: 0;
+        }
+
+        #book-modal:not(.hidden)>div {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* 📚 ปรับขนาดปกหนังสือให้เล็กลง กะทัดรัด */
+        .book-cover-container {
+            perspective: 1000px;
+        }
+
+        .book-cover-img {
+            aspect-ratio: 3 / 4;
+            object-fit: cover;
+            border-radius: 0.75rem 1rem 1rem 0.75rem;
+            box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.1), inset 3px 0 8px rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .group:hover .book-cover-img {
+            transform: translateY(-4px) rotateY(-4deg) scale(1.02);
+            box-shadow: -8px 8px 18px rgba(0, 0, 0, 0.15);
+        }
+    </style>
 </head>
+
 <body class="bg-gradient-to-tr from-cyan-50 via-sky-50 to-blue-50 text-slate-800 min-h-screen">
 
     <!-- Navigation Bar -->
     <header class="bg-white/80 backdrop-blur-md border-b border-sky-100 sticky top-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-black tracking-wider bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition">⚡ EbookGenZ</a>
+            <a href="index.html"
+                class="text-2xl font-black tracking-wider bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition">⚡
+                EbookGenZ</a>
             <div class="flex items-center space-x-5 text-sm font-semibold">
                 <a href="index.html" class="text-sky-600 underline decoration-2 underline-offset-8">หน้าร้านค้า</a>
                 <a href="downloads.html" class="text-slate-600 hover:text-sky-600 transition">ประวัติการซื้อ</a>
-                <a href="profile.html" class="text-xs font-bold text-slate-600 hover:text-sky-600 transition">ตั้งค่าโปรไฟล์</a>
+                <a href="profile.html"
+                    class="text-xs font-bold text-slate-600 hover:text-sky-600 transition">ตั้งค่าโปรไฟล์</a>
                 <span id="admin-link-container"></span>
-                <a href="cart.html" class="relative bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl shadow-md shadow-sky-500/20 hover:opacity-90 flex items-center space-x-2">
+                <a href="cart.html"
+                    class="relative bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl shadow-md shadow-sky-500/20 hover:opacity-90 flex items-center space-x-2">
                     <span>🛒 ตะกร้า</span>
-                    <span id="cart-count" class="bg-yellow-300 text-slate-900 text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">0</span>
+                    <span id="cart-count"
+                        class="bg-yellow-300 text-slate-900 text-xs w-5 h-5 rounded-full flex items-center justify-center font-black">0</span>
                 </a>
                 <div id="nav-auth-section" class="border-l border-slate-200 pl-4 flex items-center space-x-3">
-    <!-- 👤 ย้ายปุ่มโปรไฟล์มาไว้ข้างในนี้ เพื่อให้ระบบแสดงผลร่วมกันได้ -->
-    <a href="profile.html" class="flex items-center space-x-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-2xl font-bold text-xs transition shadow-sm border border-indigo-100">
-        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-        <span id="user-display-name">ผู้ใช้งาน</span>
-    </a>
-</div>
-        </div>
+                    <!-- 👤 ย้ายปุ่มโปรไฟล์มาไว้ข้างในนี้ เพื่อให้ระบบแสดงผลร่วมกันได้ -->
+                    <a href="profile.html"
+                        class="flex items-center space-x-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-2xl font-bold text-xs transition shadow-sm border border-indigo-100">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                        </svg>
+                        <span id="user-display-name">ผู้ใช้งาน</span>
+                    </a>
+                </div>
+            </div>
     </header>
 
     <!-- Main Container -->
     <main class="container mx-auto px-6 py-12 page-transition">
         <div class="mb-14 text-center max-w-3xl mx-auto">
-            <span class="bg-sky-100 text-sky-600 border border-sky-200 text-xs px-4 py-1.5 rounded-full uppercase tracking-widest font-black shadow-sm">✨ The Ultimate GenZ Bookstore</span>
-            <h1 class="text-4xl md:text-6xl font-black text-slate-900 mt-4 mb-3 tracking-tight">แหล่งรวม E-Book แหล่งรวมยอดฮิต พิชิต ใจเธอ</h1>
-            <p class="text-slate-500 mb-8 text-sm md:text-base font-medium">อ่านง่าย ได้ความรู้ไว ฟีเจอร์ครบ จบในที่เดียว อัปเกรดตัวเองได้ทุกวัน!</p>
-            
-            <div class="flex flex-col md:flex-row gap-3 bg-white p-3 rounded-3xl border border-sky-100 shadow-xl shadow-sky-500/5">
-                <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อหนังสือ หรือผู้แต่ง..." class="flex-1 px-4 py-3 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none text-sm font-medium">
-                <select id="category-filter" class="px-4 py-3 bg-slate-50 border border-sky-100 rounded-2xl text-slate-700 text-sm font-medium focus:outline-none">
+            <span
+                class="bg-sky-100 text-sky-600 border border-sky-200 text-xs px-4 py-1.5 rounded-full uppercase tracking-widest font-black shadow-sm">✨
+                The Ultimate GenZ Bookstore</span>
+            <h1 class="text-4xl md:text-6xl font-black text-slate-900 mt-4 mb-3 tracking-tight">แหล่งรวม E-Book
+                แหล่งรวมยอดฮิต พิชิต ใจเธอ</h1>
+            <p class="text-slate-500 mb-8 text-sm md:text-base font-medium">อ่านง่าย ได้ความรู้ไว ฟีเจอร์ครบ
+                จบในที่เดียว อัปเกรดตัวเองได้ทุกวัน!</p>
+
+            <div
+                class="flex flex-col md:flex-row gap-3 bg-white p-3 rounded-3xl border border-sky-100 shadow-xl shadow-sky-500/5">
+                <input type="text" id="search-input" placeholder="🔍 ค้นหาชื่อหนังสือ หรือผู้แต่ง..."
+                    class="flex-1 px-4 py-3 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none text-sm font-medium">
+                <select id="category-filter"
+                    class="px-4 py-3 bg-slate-50 border border-sky-100 rounded-2xl text-slate-700 text-sm font-medium focus:outline-none">
                     <option value="">📂 ทุกหมวดหมู่</option>
                     <option value="programming">Programming & Tech</option>
                     <option value="business">Business & Marketing</option>
                     <option value="lifestyle">Lifestyle & Design</option>
                 </select>
-                <button onclick="filterEbooks()" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-sky-500/25">ค้นหาเลย</button>
+                <button onclick="filterEbooks()"
+                    class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-sky-500/25">ค้นหาเลย</button>
             </div>
         </div>
 
@@ -108,66 +137,73 @@
     </main>
 
     <!-- Modal สำหรับแสดงรายละเอียดหนังสือ -->
-    <div id="book-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="book-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white border border-sky-100 rounded-3xl max-w-xl w-full p-6 relative shadow-2xl text-slate-800">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
-            
+            <button onclick="closeModal()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+
             <div class="flex flex-col md:flex-row gap-6">
-                <img id="modal-cover" src="" class="w-full md:w-48 h-64 object-cover rounded-2xl border border-sky-100 shadow-md">
+                <img id="modal-cover" src=""
+                    class="w-full md:w-48 h-64 object-cover rounded-2xl border border-sky-100 shadow-md">
                 <div class="flex-1 flex flex-col justify-between">
                     <div>
-                        <span id="modal-category" class="text-[10px] bg-sky-100 text-sky-600 px-3 py-1 rounded-full uppercase font-black"></span>
+                        <span id="modal-category"
+                            class="text-[10px] bg-sky-100 text-sky-600 px-3 py-1 rounded-full uppercase font-black"></span>
                         <!-- 🏷️ วางโค้ดป้ายสถานะตรงนี้ (ด้านบนสุดของการ์ดสินค้า) -->
-<d<div id="modal-status-container" class="my-2">
-    <!-- ป้ายสถานะจะแสดงตรงนี้อัตโนมัติ -->
-</div>
-                        <h2 id="modal-title" class="text-xl font-black text-slate-900 mt-3 mb-1"></h2>
-                        <p id="modal-author" class="text-xs text-slate-500 mb-3 font-medium"></p>
-                        <p id="modal-desc" class="text-xs text-slate-600 leading-relaxed bg-sky-50/60 p-3 rounded-2xl border border-sky-100/60 mb-4 font-medium">
-                            <!-- คำอธิบายหนังสือ -->
-                        </p>
+                        <d<div id="modal-status-container" class="my-2">
+                            <!-- ป้ายสถานะจะแสดงตรงนี้อัตโนมัติ -->
                     </div>
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-xs text-slate-500 font-medium">ราคาพิเศษ:</span>
-                            <span id="modal-price" class="text-2xl font-black text-sky-600"></span>
-                        </div>
-                        <button id="modal-add-btn" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white py-3 rounded-2xl text-xs font-bold shadow-lg shadow-sky-500/25">🛒 เพิ่มลงตะกร้า</button>
+                    <h2 id="modal-title" class="text-xl font-black text-slate-900 mt-3 mb-1"></h2>
+                    <p id="modal-author" class="text-xs text-slate-500 mb-3 font-medium"></p>
+                    <p id="modal-desc"
+                        class="text-xs text-slate-600 leading-relaxed bg-sky-50/60 p-3 rounded-2xl border border-sky-100/60 mb-4 font-medium">
+                        <!-- คำอธิบายหนังสือ -->
+                    </p>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs text-slate-500 font-medium">ราคาพิเศษ:</span>
+                        <span id="modal-price" class="text-2xl font-black text-sky-600"></span>
                     </div>
+                    <button id="modal-add-btn"
+                        class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white py-3 rounded-2xl text-xs font-bold shadow-lg shadow-sky-500/25">🛒
+                        เพิ่มลงตะกร้า</button>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="auth.js"></script>
     <script>
         // ⚡ บังคับอัปเดตชื่อผู้ใช้จาก localStorage มาแสดงที่ปุ่มมุมขวาบนทันที
-    window.addEventListener('DOMContentLoaded', () => {
-        try {
-            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
-            let currentUser = null;
-            
-            for (let key of keys) {
-                const data = localStorage.getItem(key);
-                if (data) {
-                    currentUser = JSON.parse(data);
-                    break;
-                }
-            }
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+                let currentUser = null;
 
-            const nameEl = document.getElementById('user-display-name');
-            if (nameEl && currentUser) {
-                const actualName = currentUser.fullName || currentUser.name || currentUser.username;
-                if (actualName) {
-                    nameEl.textContent = actualName;
+                for (let key of keys) {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        currentUser = JSON.parse(data);
+                        break;
+                    }
                 }
+
+                const nameEl = document.getElementById('user-display-name');
+                if (nameEl && currentUser) {
+                    const actualName = currentUser.fullName || currentUser.name || currentUser.username;
+                    if (actualName) {
+                        nameEl.textContent = actualName;
+                    }
+                }
+            } catch (e) {
+                console.log('Error updating name:', e);
             }
-        } catch (e) {
-            console.log('Error updating name:', e);
-        }
-    });
+        });
         // รองรับเวลากดปุ่ม Back / Forward ของเบราว์เซอร์
-        window.addEventListener("pageshow", function(event) {
+        window.addEventListener("pageshow", function (event) {
             if (event.persisted) {
                 document.body.style.opacity = "1";
                 document.body.style.transform = "translateY(0)";
@@ -178,7 +214,7 @@
         // ฟังก์ชันระบบเดิมทั้งหมด...
         const currentUser = getCurrentUser();
         if (currentUser && currentUser.role === 'admin') {
-            document.getElementById('admin-link-container').innerHTML = `<a href="reports.html" class="text-sky-600 font-bold hover:underline mr-3">📊 รายงาน</a><a href="admin.html" class="bg-sky-100 text-sky-700 hover:bg-sky-200 px-3 py-1.5 rounded-xl border border-sky-200 text-xs font-bold transition">🛠️ แอดมิน</a>`;
+            document.getElementById('admin-link-container').innerHTML = `<a href="admin_crud.html" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-xl border border-indigo-200 text-xs font-bold transition mr-2">🗄️ CRUD (8 ตาราง)</a><a href="reports.html" class="text-sky-600 font-bold hover:underline mr-3">📊 รายงาน</a><a href="admin.html" class="bg-sky-100 text-sky-700 hover:bg-sky-200 px-3 py-1.5 rounded-xl border border-sky-200 text-xs font-bold transition">🛠️ แอดมิน</a>`;
         }
 
         const ebooks = JSON.parse(localStorage.getItem('ebooks_data_genz')) || [
@@ -190,7 +226,7 @@
         function displayEbooks(items) {
             const grid = document.getElementById('ebook-grid');
             grid.innerHTML = '';
-            
+
             items.forEach(book => {
                 grid.innerHTML += `
                     <div class="bg-white/90 backdrop-blur border border-sky-100 rounded-2xl p-3 shadow-lg shadow-sky-500/5 hover:border-sky-300 transition-all duration-300 flex flex-col justify-between group">
@@ -217,11 +253,11 @@
             });
         }
 
-       // ฟังก์ชันเปิด Modal พร้อมอนิเมชั่น
-       function openModal(bookId) {
+        // ฟังก์ชันเปิด Modal พร้อมอนิเมชั่น
+        function openModal(bookId) {
             const ebooksData = JSON.parse(localStorage.getItem('ebooks_data_genz')) || ebooks;
             const book = ebooksData.find(b => b.id === bookId);
-            if(!book) return;
+            if (!book) return;
 
             document.getElementById('modal-cover').src = book.cover;
             document.getElementById('modal-category').innerText = book.category;
@@ -229,36 +265,36 @@
             document.getElementById('modal-author').innerText = `ผู้แต่ง: ${book.author}`;
             document.getElementById('modal-price').innerText = `฿${book.price}`;
             document.getElementById('modal-desc').innerText = book.description || "หนังสือดิจิทัลคุณภาพสูง เหมาะสำหรับศึกษาเรียนรู้และพัฒนาทักษะ อ่านง่าย จบไว นำไปใช้ได้จริง";
-            
+
             // 🏷️ โค้ดเช็กและแสดงป้ายสถานะตามที่แอดมินเลือก
-    const statusContainer = document.getElementById('modal-status-container');
-    let statusHTML = '';
-    
-    if (book.status === 'out') {
-        statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-rose-100 text-rose-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>สินค้าหมด</span>`;
-    } else if (book.status === 'hidden') {
-        statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>ปิดการขาย</span>`;
-    } else {
-        statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>พร้อมขาย</span>`;
-    }
-    
-    if (statusContainer) {
-        statusContainer.innerHTML = statusHTML;
-    }
+            const statusContainer = document.getElementById('modal-status-container');
+            let statusHTML = '';
+
+            if (book.status === 'out') {
+                statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-rose-100 text-rose-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>สินค้าหมด</span>`;
+            } else if (book.status === 'hidden') {
+                statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>ปิดการขาย</span>`;
+            } else {
+                statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>พร้อมขาย</span>`;
+            }
+
+            if (statusContainer) {
+                statusContainer.innerHTML = statusHTML;
+            }
 
             const addBtn = document.getElementById('modal-add-btn');
-            addBtn.onclick = function() {
+            addBtn.onclick = function () {
                 addToCart(book.id);
                 closeModal();
             };
 
             const modal = document.getElementById('book-modal');
             const modalBox = modal.querySelector('div > div');
-            
+
             // เตรียมเซ็ตค่าเริ่มต้นให้อยู่ในโหมดหดเล็กและโปร่งใสก่อนเปิด
             modalBox.style.transform = "scale(0.8) translateY(30px)";
             modalBox.style.opacity = "0";
-            
+
             // เปิดแสดงกล่อง Modal
             modal.classList.remove('hidden');
 
@@ -271,25 +307,25 @@
 
         // ฟังก์ชันปิด Modal แบบเฟดเอาต์
         // ฟังก์ชันปิด Modal แบบเฟดเอาต์และหดตัวลงสมูทๆ
-function closeModal() {
-    const modal = document.getElementById('book-modal');
-    const modalBox = modal.querySelector('div > div');
-    
-    if(modalBox) {
-        modalBox.style.transform = "scale(0.8) translateY(30px)";
-        modalBox.style.opacity = "0";
-    }
-    modal.style.opacity = "0";
-    
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.style.opacity = "1";
-        if(modalBox) {
-            modalBox.style.transform = "";
-            modalBox.style.opacity = "";
+        function closeModal() {
+            const modal = document.getElementById('book-modal');
+            const modalBox = modal.querySelector('div > div');
+
+            if (modalBox) {
+                modalBox.style.transform = "scale(0.8) translateY(30px)";
+                modalBox.style.opacity = "0";
+            }
+            modal.style.opacity = "0";
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.opacity = "1";
+                if (modalBox) {
+                    modalBox.style.transform = "";
+                    modalBox.style.opacity = "";
+                }
+            }, 300);
         }
-    }, 300);
-}
 
         function addToCart(bookId) {
             const user = getCurrentUser();
@@ -303,8 +339,8 @@ function closeModal() {
             const ebooksData = JSON.parse(localStorage.getItem('ebooks_data_genz')) || ebooks;
             const book = ebooksData.find(b => b.id === bookId);
             const existing = cart.find(item => item.id === bookId);
-            
-            if(existing) { existing.quantity += 1; } else { cart.push({ ...book, quantity: 1 }); }
+
+            if (existing) { existing.quantity += 1; } else { cart.push({ ...book, quantity: 1 }); }
             saveUserCart(cart);
             updateCartCount();
             alert(`เพิ่ม "${book.title}" ลงตะกร้าแล้ว! 🛒`);
@@ -327,7 +363,7 @@ function closeModal() {
         updateNavbarAuth();
 
         // อนิเมชั่นเวลากดคลิกลิงก์เปลี่ยนหน้า
-        document.addEventListener("click", function(e) {
+        document.addEventListener("click", function (e) {
             const link = e.target.closest("a");
             if (link && link.href && link.target !== "_blank" && link.hostname === window.location.hostname) {
                 // เช็กว่าเป็นลิงก์ภายในเว็บไซต์เดียวกันหรือไม่
@@ -344,141 +380,147 @@ function closeModal() {
         });
 
         // ทำให้หน้าเว็บค่อยๆ เฟดเลื่อนขึ้นมาตอนโหลดเสร็จ
-        window.addEventListener("pageshow", function() {
+        window.addEventListener("pageshow", function () {
             document.body.style.opacity = "1";
             document.body.style.transform = "translateY(0)";
         });
 
         // ฟังก์ชันเปิด-ปิดกล่อง Contact Support พร้อมอนิเมชั่นสมูทๆ
-function toggleSupportModal() {
-    const modal = document.getElementById('support-modal');
-    if (modal.classList.contains('hidden')) {
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modal.classList.remove('scale-95', 'opacity-0');
-            modal.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    } else {
-        modal.classList.remove('scale-100', 'opacity-100');
-        modal.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 300);
-    }
-}
-
-    // 🚀 บังคับเปลี่ยนชื่อและดักรออัปเดตชื่อล่าสุดจากหน้าตั้งค่าโปรไฟล์แบบเรียลไทม์
-    function updateNavbarUsername() {
-        try {
-            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
-            let currentUser = null;
-            
-            for (let key of keys) {
-                const data = localStorage.getItem(key);
-                if (data) {
-                    currentUser = JSON.parse(data);
-                    break;
-                }
+        function toggleSupportModal() {
+            const modal = document.getElementById('support-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('scale-95', 'opacity-0');
+                    modal.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            } else {
+                modal.classList.remove('scale-100', 'opacity-100');
+                modal.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
             }
+        }
 
-            if (currentUser) {
-                const actualName = currentUser.fullName || currentUser.name || currentUser.username;
-                if (actualName) {
-                    // 1. เปลี่ยนชื่อใน element ที่เราเตรียมไว้
-                    const nameEl = document.getElementById('user-display-name');
-                    if (nameEl) nameEl.textContent = actualName;
+        // 🚀 บังคับเปลี่ยนชื่อและดักรออัปเดตชื่อล่าสุดจากหน้าตั้งค่าโปรไฟล์แบบเรียลไทม์
+        function updateNavbarUsername() {
+            try {
+                const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+                let currentUser = null;
 
-                    // 2. ถ้ามีสคริปต์ตัวอื่นมาทับ ให้หาตัวอักษร "Test Vers" ใน nav แล้วบังคับเปลี่ยนทับทันที
-                    const navAuthSection = document.getElementById('nav-auth-section');
-                    if (navAuthSection) {
-                        // ค้นหาทุกแท็กข้อความข้างในแล้วเปลี่ยนถ้าเจอชื่อเก่า
-                        const walker = document.createTreeWalker(navAuthSection, NodeFilter.SHOW_TEXT, null, false);
-                        let node;
-                        while (node = walker.nextNode()) {
-                            if (node.nodeValue.includes('Test Vers')) {
-                                node.nodeValue = node.nodeValue.replace(/Test Vers.*/g, actualName + ' (customer)');
+                for (let key of keys) {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        currentUser = JSON.parse(data);
+                        break;
+                    }
+                }
+
+                if (currentUser) {
+                    const actualName = currentUser.fullName || currentUser.name || currentUser.username;
+                    if (actualName) {
+                        // 1. เปลี่ยนชื่อใน element ที่เราเตรียมไว้
+                        const nameEl = document.getElementById('user-display-name');
+                        if (nameEl) nameEl.textContent = actualName;
+
+                        // 2. ถ้ามีสคริปต์ตัวอื่นมาทับ ให้หาตัวอักษร "Test Vers" ใน nav แล้วบังคับเปลี่ยนทับทันที
+                        const navAuthSection = document.getElementById('nav-auth-section');
+                        if (navAuthSection) {
+                            // ค้นหาทุกแท็กข้อความข้างในแล้วเปลี่ยนถ้าเจอชื่อเก่า
+                            const walker = document.createTreeWalker(navAuthSection, NodeFilter.SHOW_TEXT, null, false);
+                            let node;
+                            while (node = walker.nextNode()) {
+                                if (node.nodeValue.includes('Test Vers')) {
+                                    node.nodeValue = node.nodeValue.replace(/Test Vers.*/g, actualName + ' (customer)');
+                                }
                             }
                         }
                     }
                 }
+            } catch (e) {
+                console.log(e);
             }
-        } catch (e) {
-            console.log(e);
         }
-    }
 
-    // รันทันทีเมื่อโหลดเสร็จ และดักรอเผื่อสคริปต์อื่นโหลดช้า
-    window.addEventListener('DOMContentLoaded', updateNavbarUsername);
-    setTimeout(updateNavbarUsername, 200);
-    setTimeout(updateNavbarUsername, 600);
+        // รันทันทีเมื่อโหลดเสร็จ และดักรอเผื่อสคริปต์อื่นโหลดช้า
+        window.addEventListener('DOMContentLoaded', updateNavbarUsername);
+        setTimeout(updateNavbarUsername, 200);
+        setTimeout(updateNavbarUsername, 600);
 
     </script>
     <!-- 💬 ปุ่ม Support ลอยมุมขวาล่าง -->
-<div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-    <!-- กล่องป๊อปอัป Contact Support (ซ่อนไว้ตอนแรก) -->
-    <div id="support-modal" class="mb-4 bg-white/95 backdrop-blur-md border border-sky-100 rounded-3xl p-6 shadow-2xl shadow-sky-500/20 w-80 relative hidden transition-all duration-300 transform scale-95 opacity-0">
-        <!-- ปุ่มปิด (X) -->
-        <button onclick="toggleSupportModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center transition">✕</button>
-        
-        <!-- หัวข้อ -->
-        <div class="flex items-center space-x-2 mb-5">
-            <span class="text-xl">💬</span>
-            <h3 class="font-black text-slate-900 text-base">Contact Support</h3>
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <!-- กล่องป๊อปอัป Contact Support (ซ่อนไว้ตอนแรก) -->
+        <div id="support-modal"
+            class="mb-4 bg-white/95 backdrop-blur-md border border-sky-100 rounded-3xl p-6 shadow-2xl shadow-sky-500/20 w-80 relative hidden transition-all duration-300 transform scale-95 opacity-0">
+            <!-- ปุ่มปิด (X) -->
+            <button onclick="toggleSupportModal()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-bold w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center transition">✕</button>
+
+            <!-- หัวข้อ -->
+            <div class="flex items-center space-x-2 mb-5">
+                <span class="text-xl">💬</span>
+                <h3 class="font-black text-slate-900 text-base">Contact Support</h3>
+            </div>
+
+            <!-- ปุ่มกระทำ -->
+            <div class="space-y-3 mb-6">
+                <button onclick="alert('ระบบแจ้งปัญหาเปิดใช้งานผ่านช่องทางแชทหลัก')"
+                    class="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:opacity-90 text-white py-3 px-4 rounded-2xl text-xs font-black shadow-md shadow-rose-500/20 flex items-center justify-center space-x-2 transition transform active:scale-95">
+                    <span>🔧 แจ้งปัญหา</span>
+                </button>
+                <button onclick="alert('กำลังเชื่อมต่อไปยังแอดมิน...')"
+                    class="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:opacity-90 text-white py-3 px-4 rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 flex items-center justify-center space-x-2 transition transform active:scale-95">
+                    <span>💬 ติดต่อสอบถาม Chat</span>
+                </button>
+            </div>
+
+            <!-- เวลาให้บริการ -->
+            <div class="border-t border-sky-100 pt-4">
+                <div class="flex items-center space-x-2 mb-2">
+                    <span class="text-sm">🕒</span>
+                    <span class="font-black text-slate-900 text-xs">เวลาให้บริการ</span>
+                </div>
+                <div class="text-[11px] text-slate-500 space-y-1 font-medium">
+                    <p>📅 จ-ศ 11:00 – 23:00</p>
+                    <p>📅 ส-อา 9:00 – 12:00</p>
+                </div>
+            </div>
         </div>
 
-        <!-- ปุ่มกระทำ -->
-        <div class="space-y-3 mb-6">
-            <button onclick="alert('ระบบแจ้งปัญหาเปิดใช้งานผ่านช่องทางแชทหลัก')" class="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:opacity-90 text-white py-3 px-4 rounded-2xl text-xs font-black shadow-md shadow-rose-500/20 flex items-center justify-center space-x-2 transition transform active:scale-95">
-                <span>🔧 แจ้งปัญหา</span>
-            </button>
-            <button onclick="alert('กำลังเชื่อมต่อไปยังแอดมิน...')" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 hover:opacity-90 text-white py-3 px-4 rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 flex items-center justify-center space-x-2 transition transform active:scale-95">
-                <span>💬 ติดต่อสอบถาม Chat</span>
-            </button>
-        </div>
-
-        <!-- เวลาให้บริการ -->
-        <div class="border-t border-sky-100 pt-4">
-            <div class="flex items-center space-x-2 mb-2">
-                <span class="text-sm">🕒</span>
-                <span class="font-black text-slate-900 text-xs">เวลาให้บริการ</span>
-            </div>
-            <div class="text-[11px] text-slate-500 space-y-1 font-medium">
-                <p>📅 จ-ศ 11:00 – 23:00</p>
-                <p>📅 ส-อา 9:00 – 12:00</p>
-            </div>
-        </div>
+        <!-- ปุ่มกดเปิด-ปิด Support -->
+        <button onclick="toggleSupportModal()"
+            class="bg-gradient-to-r from-rose-500 to-pink-500 hover:opacity-95 text-white px-5 py-3 rounded-2xl shadow-lg shadow-rose-500/30 flex items-center space-x-2 font-black text-xs transition transform hover:scale-105 active:scale-95">
+            <span>💬 Support</span>
+        </button>
     </div>
+    <script>
+        // 🔄 ดึงชื่อผู้ใช้ล่าสุดจาก localStorage มาแสดงที่ปุ่มมุมขวาบนอัตโนมัติ
+        document.addEventListener('DOMContentLoaded', () => {
+            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
+            let currentUser = null;
 
-    <!-- ปุ่มกดเปิด-ปิด Support -->
-    <button onclick="toggleSupportModal()" class="bg-gradient-to-r from-rose-500 to-pink-500 hover:opacity-95 text-white px-5 py-3 rounded-2xl shadow-lg shadow-rose-500/30 flex items-center space-x-2 font-black text-xs transition transform hover:scale-105 active:scale-95">
-        <span>💬 Support</span>
-    </button>
-</div>
-<script>
-    // 🔄 ดึงชื่อผู้ใช้ล่าสุดจาก localStorage มาแสดงที่ปุ่มมุมขวาบนอัตโนมัติ
-    document.addEventListener('DOMContentLoaded', () => {
-        const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
-        let currentUser = null;
-        
-        for (let key of keys) {
-            const data = localStorage.getItem(key);
-            if (data) {
-                try {
-                    currentUser = JSON.parse(data);
-                    break;
-                } catch (e) {}
+            for (let key of keys) {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    try {
+                        currentUser = JSON.parse(data);
+                        break;
+                    } catch (e) { }
+                }
             }
-        }
 
-        const nameEl = document.getElementById('user-display-name');
-        if (nameEl) {
-            if (currentUser) {
-                nameEl.textContent = currentUser.fullName || currentUser.name || currentUser.username || 'ผู้ใช้งาน';
-            } else {
-                nameEl.textContent = 'ผู้เยี่ยมชม';
+            const nameEl = document.getElementById('user-display-name');
+            if (nameEl) {
+                if (currentUser) {
+                    nameEl.textContent = currentUser.fullName || currentUser.name || currentUser.username || 'ผู้ใช้งาน';
+                } else {
+                    nameEl.textContent = 'ผู้เยี่ยมชม';
+                }
             }
-        }
-    });
-</script>
+        });
+    </script>
 </body>
+
 </html>

@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Admin CRUD Panel (8 ตาราง) - EbookGenZ 🗄️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .badge-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 shadow-xl">
+        <div class="container mx-auto px-4 lg:px-6 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <a href="admin.html" class="flex items-center space-x-2 text-sky-400 hover:text-sky-300 transition">
+                    <span class="text-2xl">⚡</span>
+                    <span class="text-xl font-black tracking-wider text-white">EbookGenZ</span>
+                </a>
+                <span class="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full font-black border border-indigo-500/30 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 badge-pulse"></span>
+                    Admin CRUD Studio (8 ตาราง 3NF)
+                </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center flex-wrap gap-2 text-xs font-bold">
+                <button onclick="confirmResetSeedData()" title="รีเซ็ตฐานข้อมูลเป็นค่าเริ่มต้น 30+ รายการ" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <span>🔄 รีเซ็ต Seed Data (30+ ออเดอร์)</span>
+                </button>
+                <button onclick="exportSQLFile()" title="ดาวน์โหลดไฟล์ SQL" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <span>📥 ส่งออก SQL (.sql)</span>
+                </button>
+                <button onclick="copySQLInsertStatements()" title="คัดลอกคำสั่ง INSERT ทั้งหมด" class="bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <span>📋 คัดลอก SQL</span>
+                </button>
+                <div class="h-5 w-px bg-slate-800 mx-1"></div>
+                <a href="reports.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl border border-slate-700 transition">📊 รายงานวิเคราะห์</a>
+                <a href="admin.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl border border-slate-700 transition">🛠️ แอดมินทั่วไป</a>
+                <a href="index.html" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-3.5 py-2 rounded-xl shadow-lg shadow-sky-500/20 transition font-black">หน้าร้านค้า ↗</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stat Summary Bar -->
+    <div class="bg-slate-950/40 border-b border-slate-800/80 px-4 lg:px-6 py-4">
+        <div class="container mx-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 text-center">
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('roles')">
+                <p class="text-[11px] text-slate-400 font-medium">1. บทบาท (Roles)</p>
+                <p id="stat-count-roles" class="text-lg font-black text-sky-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('users')">
+                <p class="text-[11px] text-slate-400 font-medium">2. สมาชิก (Users)</p>
+                <p id="stat-count-users" class="text-lg font-black text-indigo-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('categories')">
+                <p class="text-[11px] text-slate-400 font-medium">3. หมวดหมู่</p>
+                <p id="stat-count-categories" class="text-lg font-black text-amber-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('ebooks')">
+                <p class="text-[11px] text-slate-400 font-medium">4. อีบุ๊ก (Ebooks)</p>
+                <p id="stat-count-ebooks" class="text-lg font-black text-emerald-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('orders')">
+                <p class="text-[11px] text-slate-400 font-medium">5. คำสั่งซื้อ (Orders)</p>
+                <p id="stat-count-orders" class="text-lg font-black text-purple-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('order_items')">
+                <p class="text-[11px] text-slate-400 font-medium">6. รายการสั่งซื้อ</p>
+                <p id="stat-count-order_items" class="text-lg font-black text-pink-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('payments')">
+                <p class="text-[11px] text-slate-400 font-medium">7. การชำระเงิน</p>
+                <p id="stat-count-payments" class="text-lg font-black text-teal-400">0</p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-800 p-2.5 rounded-2xl cursor-pointer hover:border-sky-500/50 transition" onclick="switchTable('download_links')">
+                <p class="text-[11px] text-slate-400 font-medium">8. สิทธิ์ดาวน์โหลด</p>
+                <p id="stat-count-download_links" class="text-lg font-black text-blue-400">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Container -->
+    <main class="container mx-auto px-4 lg:px-6 py-6 flex-1 flex flex-col">
+        
+        <!-- Table Navigation Pills (8 Tables) -->
+        <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-5 custom-scrollbar text-xs font-bold">
+            <button onclick="switchTable('roles')" id="nav-tab-roles" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>🛡️ 1. roles</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">3</span>
+            </button>
+            <button onclick="switchTable('users')" id="nav-tab-users" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>👥 2. users</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">10</span>
+            </button>
+            <button onclick="switchTable('categories')" id="nav-tab-categories" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>📂 3. categories</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">4</span>
+            </button>
+            <button onclick="switchTable('ebooks')" id="nav-tab-ebooks" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>📚 4. ebooks</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">10</span>
+            </button>
+            <button onclick="switchTable('orders')" id="nav-tab-orders" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>📦 5. orders</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">32</span>
+            </button>
+            <button onclick="switchTable('order_items')" id="nav-tab-order_items" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>🛒 6. order_items</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">42</span>
+            </button>
+            <button onclick="switchTable('payments')" id="nav-tab-payments" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>💳 7. payments</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">32</span>
+            </button>
+            <button onclick="switchTable('download_links')" id="nav-tab-download_links" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
+                <span>🔗 8. download_links</span>
+                <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">38</span>
+            </button>
+        </div>
+
+        <!-- Table Information and Controls Header -->
+        <div class="bg-slate-800/90 backdrop-blur border border-slate-700/80 rounded-3xl p-5 mb-5 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 id="active-table-title" class="text-xl lg:text-2xl font-black text-white">ตาราง: <span class="text-sky-400 font-mono">ebooks</span></h1>
+                    <span id="active-table-desc-badge" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-medium">รายการหนังสือดิจิทัล</span>
+                </div>
+                <p id="active-table-info" class="text-xs text-slate-400 mt-1">คีย์หลัก: <span class="font-mono text-amber-300">ebook_id</span> | เชื่อมโยง Foreign Key: <span class="font-mono text-sky-300">category_id -> categories(category_id)</span></p>
+            </div>
+
+            <!-- Search, Filter & Add Record Button -->
+            <div class="flex items-center flex-wrap gap-3">
+                <div class="relative">
+                    <input type="text" id="table-search-input" oninput="handleTableSearch()" placeholder="🔍 ค้นหาในตาราง..." class="bg-slate-900/90 border border-slate-700 text-slate-200 text-xs rounded-2xl px-4 py-2.5 pl-9 focus:outline-none focus:border-sky-500 w-52 md:w-64 transition">
+                    <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+                </div>
+
+                <div id="filter-container">
+                    <!-- Dynamic filter dropdown if needed -->
+                </div>
+
+                <button onclick="openAddModal()" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-sky-500/25 transition flex items-center gap-2 transform active:scale-95">
+                    <span>+ เพิ่มข้อมูลใหม่</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Grid Table Container -->
+        <div class="bg-slate-800/80 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl flex-1 flex flex-col mb-6">
+            <div class="overflow-x-auto flex-1 custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead id="grid-table-head" class="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-700 sticky top-0 z-10 backdrop-blur">
+                        <!-- Table header will be dynamically rendered -->
+                    </thead>
+                    <tbody id="grid-table-body" class="divide-y divide-slate-700/60 text-slate-300">
+                        <!-- Table rows will be dynamically rendered -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Status -->
+            <div class="bg-slate-900/90 px-6 py-3 border-t border-slate-700 flex flex-wrap justify-between items-center text-xs text-slate-400">
+                <div id="grid-row-summary">แสดงทั้งหมด 10 รายการ</div>
+                <div class="flex items-center space-x-2 text-[11px]">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>ซิงค์ข้อมูลกับระบบหน้าร้านและแดชบอร์ดอัตโนมัติ (Realtime Sync)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SQL Query Simulator Inspector (Great for Teacher Presentations!) -->
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-4 shadow-xl">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-black text-sky-400 font-mono">⚡ SQL QUERY INSPECTOR</span>
+                    <span class="text-[10px] bg-sky-950 text-sky-300 border border-sky-800/60 px-2 py-0.5 rounded-md">คำสั่ง SQL ที่ประมวลผลจริง</span>
+                </div>
+                <button onclick="copyCurrentSQLQuery()" class="text-[11px] text-slate-400 hover:text-white transition font-mono">📋 คัดลอกคำสั่ง SQL</button>
+            </div>
+            <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto custom-scrollbar select-all" id="sql-inspector-text">
+                SELECT * FROM ebooks ORDER BY ebook_id ASC;
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Form (Add / Edit Record) -->
+    <div id="crud-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-850 bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative text-slate-100 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div>
+                    <h3 id="modal-title" class="text-lg font-black text-white">+ เพิ่มข้อมูลใหม่</h3>
+                    <p id="modal-subtitle" class="text-xs text-slate-400">ระบุรายละเอียดข้อมูลที่ต้องการบันทึกลงตาราง</p>
+                </div>
+                <button onclick="closeCrudModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-black transition">✕</button>
+            </div>
+
+            <!-- Form Content -->
+            <form id="crud-modal-form" onsubmit="handleFormSubmit(event)" class="space-y-4 py-4 overflow-y-auto flex-1 custom-scrollbar px-1">
+                <!-- Fields dynamically generated based on active table -->
+                <div id="modal-fields-container" class="space-y-4 text-xs"></div>
+            </form>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-end space-x-3 text-xs font-bold">
+                <button type="button" onclick="closeCrudModal()" class="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ยกเลิก</button>
+                <button type="submit" form="crud-modal-form" id="modal-save-btn" class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black shadow-lg shadow-sky-500/25 transition">💾 บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Lightbox Modal -->
+    <div id="image-preview-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden z-50 flex items-center justify-center p-4 cursor-pointer" onclick="closeImagePreview()">
+        <div class="relative max-w-md w-full bg-slate-900 p-4 rounded-3xl border border-slate-700 shadow-2xl text-center" onclick="event.stopPropagation()">
+            <img id="image-preview-img" src="" alt="Preview" class="w-full max-h-[70vh] object-contain rounded-2xl mb-3">
+            <p id="image-preview-caption" class="text-xs text-slate-400 font-medium"></p>
+            <button onclick="closeImagePreview()" class="mt-3 bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded-xl text-xs font-bold">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Data Logic -->
+    <script>
+        // =====================================================================
+        // โครงสร้างฐานข้อมูลเริ่มต้น (Seed Data สำหรับ 8 ตาราง)
+        // =====================================================================
+        const DEFAULT_SEED_DATA = {
+            roles: [
+                { role_id: 1, role_name: "admin", description: "ผู้ดูแลระบบ มีสิทธิ์สูงสุดในการจัดการฐานข้อมูลและอนุมัติออเดอร์" },
+                { role_id: 2, role_name: "customer", description: "ลูกค้าทั่วไป สามารถเลือกดู สั่งซื้อ และดาวน์โหลดหนังสือที่ชำระเงินแล้ว" },
+                { role_id: 3, role_name: "staff", description: "เจ้าหน้าที่ฝ่ายบริการ ตรวจสอบสลิปและดูแลคลังสินค้า" }
+            ],
+            users: [
+                { user_id: 1, role_id: 1, username: "admin", email: "admin@ebookgenz.com", password_hash: "scrypt:32768:8:1$admin123", full_name: "ผู้ดูแลระบบหลัก", phone: "081-111-2233", created_at: "2026-08-01 08:00:00" },
+                { user_id: 2, role_id: 2, username: "customer", email: "customer@gmail.com", password_hash: "scrypt:32768:8:1$cust123", full_name: "คุณลูกค้า ทดสอบระบบ", phone: "089-222-3344", created_at: "2026-08-05 09:30:00" },
+                { user_id: 3, role_id: 2, username: "somchai_dev", email: "somchai@gmail.com", password_hash: "scrypt:32768:8:1$somchai123", full_name: "สมชาย สายโค้ด", phone: "086-333-4455", created_at: "2026-08-10 11:20:00" },
+                { user_id: 4, role_id: 2, username: "ariya_biz", email: "ariya@business.co.th", password_hash: "scrypt:32768:8:1$ariya123", full_name: "อริยา นักธุรกิจไฟแรง", phone: "085-444-5566", created_at: "2026-08-12 14:15:00" },
+                { user_id: 5, role_id: 2, username: "natthapon_k", email: "natthapon@hotmail.com", password_hash: "scrypt:32768:8:1$nattha123", full_name: "ณัฐพล การุณย์", phone: "082-555-6677", created_at: "2026-08-15 16:40:00" },
+                { user_id: 6, role_id: 2, username: "pimpa_design", email: "pimpa@designstudio.io", password_hash: "scrypt:32768:8:1$pimpa123", full_name: "พิมพา ดีไซน์เนอร์", phone: "084-666-7788", created_at: "2026-08-18 10:05:00" },
+                { user_id: 7, role_id: 2, username: "charlie_tech", email: "charlie@gmail.com", password_hash: "scrypt:32768:8:1$charlie123", full_name: "ชาลี ซอฟต์แวร์แมน", phone: "083-777-8899", created_at: "2026-08-20 13:50:00" },
+                { user_id: 8, role_id: 2, username: "kanokwan_m", email: "kanokwan@yahoo.com", password_hash: "scrypt:32768:8:1$kanok123", full_name: "กนกวรรณ มาร์เก็ตติ้ง", phone: "087-888-9900", created_at: "2026-08-22 17:25:00" },
+                { user_id: 9, role_id: 2, username: "thanawat_p", email: "thanawat@gmail.com", password_hash: "scrypt:32768:8:1$thana123", full_name: "ธนวัฒน์ โปรเจกต์", phone: "088-999-0011", created_at: "2026-08-25 19:10:00" },
+                { user_id: 10, role_id: 3, username: "staff_jane", email: "jane.staff@ebookgenz.com", password_hash: "scrypt:32768:8:1$jane123", full_name: "เจนจิรา ตรวจสลิป", phone: "080-000-1122", created_at: "2026-08-02 08:30:00" }
+            ],
+            categories: [
+                { category_id: 1, category_name: "Programming & Tech", category_slug: "programming", description: "หนังสือการเขียนโปรแกรม โค้ดดิ้ง สถาปัตยกรรมระบบ และเทคโนโลยีสมัยใหม่", icon: "💻" },
+                { category_id: 2, category_name: "Business & Marketing", category_slug: "business", description: "กลยุทธ์การตลาด การบริหารธุรกิจ สตาร์ทอัพ และการเงินการลงทุนสำหรับคนรุ่นใหม่", icon: "📈" },
+                { category_id: 3, category_name: "Lifestyle & Design", category_slug: "lifestyle", description: "การออกแบบ แฟชั่น ดีไซน์ระบบ การพัฒนาตนเอง และศิลปะการใช้ชีวิต", icon: "🎨" },
+                { category_id: 4, category_name: "AI & Data Science", category_slug: "ai_data", description: "ปัญญาประดิษฐ์ วิศวกรรมข้อมูล Machine Learning และ Data Analytics", icon: "🤖" }
+            ],
+            ebooks: [
+                { ebook_id: 1, category_id: 1, title: "Clean Code ฉบับปรมาจารย์", author: "Robert C. Martin", price: 350.00, description: "เรียนรู้หลักการเขียนโค้ดให้สะอาด อ่านง่าย บำรุงรักษาง่าย และได้มาตรฐานระดับโปรแกรมเมอร์มืออาชีพ", cover_image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80", file_url: "files/clean_code.pdf", is_active: 1, created_at: "2026-08-01 10:00:00" },
+                { ebook_id: 2, category_id: 1, title: "Java Object-Oriented Mastery", author: "Somchai Tech", price: 290.00, description: "เจาะลึกหลักการเขียนโปรแกรมเชิงวัตถุ (OOP) ด้วยภาษา Java ตั้งแต่พื้นฐานจนถึงโปรเจกต์ระดับองค์กร", cover_image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=500&q=80", file_url: "files/java_oop.pdf", is_active: 1, created_at: "2026-08-01 10:30:00" },
+                { ebook_id: 3, category_id: 2, title: "Marketing Mix 4P & 4C ยุค GenZ", author: "GenZ Strategist", price: 199.00, description: "กลยุทธ์การตลาดเจาะกลุ่มผู้บริโภคยุคใหม่ ทำคอนเทนต์ให้ปัง ยิงแอดให้ตรงเป้าหมาย และสร้างแบรนด์ที่ยั่งยืน", cover_image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=500&q=80", file_url: "files/marketing_genz.pdf", is_active: 1, created_at: "2026-08-02 11:00:00" },
+                { ebook_id: 4, category_id: 3, title: "Gothic Streetwear Design Guide", author: "Dark Star Studio", price: 450.00, description: "คู่มือออกแบบเสื้อผ้าสตรีทแฟชั่นสไตล์โกธิค การเลือกเนื้อผ้า ลายสกรีน และเทรนด์แฟชั่นร่วมสมัย", cover_image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=500&q=80", file_url: "files/gothic_design.pdf", is_active: 1, created_at: "2026-08-02 11:30:00" },
+                { ebook_id: 5, category_id: 1, title: "Database Architecture 3NF & SQL", author: "Data Pro", price: 320.00, description: "สถาปัตยกรรมฐานข้อมูลเชิงสัมพันธ์ การออกแบบ Normalization (1NF-3NF) และการปรับแต่ง Index ให้เร็วระดับมิลลิวินาที", cover_image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80", file_url: "files/database_3nf.pdf", is_active: 1, created_at: "2026-08-03 09:00:00" },
+                { ebook_id: 6, category_id: 2, title: "Startup Financial Planning 101", author: "Ariya Money", price: 250.00, description: "การวางแผนการเงินสำหรับสตาร์ทอัพ งบกระแสเงินสด การระดมทุน และการบริหารงบประมาณอย่างมีประสิทธิภาพ", cover_image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=500&q=80", file_url: "files/startup_finance.pdf", is_active: 1, created_at: "2026-08-03 09:30:00" },
+                { ebook_id: 7, category_id: 1, title: "LiftCode: พิชิตโจทย์อัลกอริทึม", author: "Ninja Shadow", price: 899.00, description: "ยกระดับสกิลการแก้โจทย์สัมภาษณ์งานบริษัทเทคชั้นนำ อัลกอริทึม Dynamic Programming และกราฟ", cover_image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=500&q=80", file_url: "files/liftcode.pdf", is_active: 1, created_at: "2026-08-04 14:00:00" },
+                { ebook_id: 8, category_id: 4, title: "Generative AI & LLM Engineering", author: "Dr. Chaiwat AI", price: 490.00, description: "วิศวกรรมปัญญาประดิษฐ์ยุคใหม่ สร้างแอปพลิเคชันด้วย LLM, Prompt Engineering และ RAG Architecture", cover_image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=500&q=80", file_url: "files/llm_ai.pdf", is_active: 1, created_at: "2026-08-05 15:00:00" },
+                { ebook_id: 9, category_id: 3, title: "Modern UI/UX Design System", author: "Pimpa Design", price: 380.00, description: "สร้างระบบการออกแบบ (Design System) ที่ขยายขนาดได้ สวยงาม และเข้าถึงได้ตามมาตรฐาน Web Accessibility", cover_image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=500&q=80", file_url: "files/uiux_system.pdf", is_active: 1, created_at: "2026-08-06 16:00:00" },
+                { ebook_id: 10, category_id: 4, title: "Data Storytelling with Dashboard", author: "Kanya Insight", price: 280.00, description: "เปลี่ยนตัวเลขแห้งแล้งให้เป็นเรื่องราวสร้างแรงบันดาลใจ เทคนิคการสร้างแดชบอร์ดและรายงานวิเคราะห์", cover_image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=500&q=80", file_url: "files/data_story.pdf", is_active: 1, created_at: "2026-08-07 10:00:00" }
+            ],
+            orders: [
+                { order_id: 101, user_id: 2, total_amount: 700.00, order_status: "confirmed", order_date: "2026-09-01 10:15:00" },
+                { order_id: 102, user_id: 3, total_amount: 899.00, order_status: "confirmed", order_date: "2026-09-01 14:20:00" },
+                { order_id: 103, user_id: 4, total_amount: 449.00, order_status: "confirmed", order_date: "2026-09-02 09:45:00" },
+                { order_id: 104, user_id: 5, total_amount: 450.00, order_status: "confirmed", order_date: "2026-09-02 11:30:00" },
+                { order_id: 105, user_id: 6, total_amount: 380.00, order_status: "confirmed", order_date: "2026-09-03 13:10:00" },
+                { order_id: 106, user_id: 7, total_amount: 670.00, order_status: "confirmed", order_date: "2026-09-04 15:55:00" },
+                { order_id: 107, user_id: 8, total_amount: 199.00, order_status: "confirmed", order_date: "2026-09-05 16:40:00" },
+                { order_id: 108, user_id: 9, total_amount: 770.00, order_status: "confirmed", order_date: "2026-09-06 18:25:00" },
+                { order_id: 109, user_id: 3, total_amount: 350.00, order_status: "confirmed", order_date: "2026-09-07 08:30:00" },
+                { order_id: 110, user_id: 4, total_amount: 740.00, order_status: "confirmed", order_date: "2026-09-08 12:15:00" },
+                { order_id: 111, user_id: 2, total_amount: 899.00, order_status: "confirmed", order_date: "2026-09-09 14:50:00" },
+                { order_id: 112, user_id: 5, total_amount: 320.00, order_status: "confirmed", order_date: "2026-09-10 17:05:00" },
+                { order_id: 113, user_id: 6, total_amount: 830.00, order_status: "confirmed", order_date: "2026-09-11 19:40:00" },
+                { order_id: 114, user_id: 7, total_amount: 490.00, order_status: "confirmed", order_date: "2026-09-12 11:20:00" },
+                { order_id: 115, user_id: 8, total_amount: 449.00, order_status: "confirmed", order_date: "2026-09-13 13:35:00" },
+                { order_id: 116, user_id: 9, total_amount: 290.00, order_status: "confirmed", order_date: "2026-09-14 15:10:00" },
+                { order_id: 117, user_id: 3, total_amount: 810.00, order_status: "confirmed", order_date: "2026-09-15 16:45:00" },
+                { order_id: 118, user_id: 4, total_amount: 250.00, order_status: "confirmed", order_date: "2026-09-16 10:25:00" },
+                { order_id: 119, user_id: 2, total_amount: 450.00, order_status: "confirmed", order_date: "2026-09-17 12:00:00" },
+                { order_id: 120, user_id: 5, total_amount: 1249.00, order_status: "confirmed", order_date: "2026-09-18 14:15:00" },
+                { order_id: 121, user_id: 6, total_amount: 450.00, order_status: "confirmed", order_date: "2026-09-19 16:30:00" },
+                { order_id: 122, user_id: 7, total_amount: 350.00, order_status: "confirmed", order_date: "2026-09-20 18:05:00" },
+                { order_id: 123, user_id: 8, total_amount: 280.00, order_status: "confirmed", order_date: "2026-09-21 09:10:00" },
+                { order_id: 124, user_id: 9, total_amount: 490.00, order_status: "confirmed", order_date: "2026-09-22 11:45:00" },
+                { order_id: 125, user_id: 3, total_amount: 1219.00, order_status: "confirmed", order_date: "2026-09-23 13:50:00" },
+                { order_id: 126, user_id: 4, total_amount: 380.00, order_status: "confirmed", order_date: "2026-09-24 15:20:00" },
+                { order_id: 127, user_id: 2, total_amount: 540.00, order_status: "confirmed", order_date: "2026-09-25 17:35:00" },
+                { order_id: 128, user_id: 5, total_amount: 899.00, order_status: "confirmed", order_date: "2026-09-26 19:15:00" },
+                { order_id: 129, user_id: 6, total_amount: 320.00, order_status: "pending", order_date: "2026-09-27 10:00:00" },
+                { order_id: 130, user_id: 7, total_amount: 640.00, order_status: "pending", order_date: "2026-09-27 13:20:00" },
+                { order_id: 131, user_id: 8, total_amount: 350.00, order_status: "pending", order_date: "2026-09-28 15:40:00" },
+                { order_id: 132, user_id: 9, total_amount: 450.00, order_status: "cancelled", order_date: "2026-09-28 17:00:00" }
+            ],
+            order_items: [
+                { order_item_id: 1, order_id: 101, ebook_id: 1, quantity: 2, unit_price: 350.00, subtotal: 700.00 },
+                { order_item_id: 2, order_id: 102, ebook_id: 7, quantity: 1, unit_price: 899.00, subtotal: 899.00 },
+                { order_item_id: 3, order_id: 103, ebook_id: 3, quantity: 1, unit_price: 199.00, subtotal: 199.00 },
+                { order_item_id: 4, order_id: 103, ebook_id: 6, quantity: 1, unit_price: 250.00, subtotal: 250.00 },
+                { order_item_id: 5, order_id: 104, ebook_id: 4, quantity: 1, unit_price: 450.00, subtotal: 450.00 },
+                { order_item_id: 6, order_id: 105, ebook_id: 9, quantity: 1, unit_price: 380.00, subtotal: 380.00 },
+                { order_item_id: 7, order_id: 106, ebook_id: 1, quantity: 1, unit_price: 350.00, subtotal: 350.00 },
+                { order_item_id: 8, order_id: 106, ebook_id: 5, quantity: 1, unit_price: 320.00, subtotal: 320.00 },
+                { order_item_id: 9, order_id: 107, ebook_id: 3, quantity: 1, unit_price: 199.00, subtotal: 199.00 },
+                { order_item_id: 10, order_id: 108, ebook_id: 8, quantity: 1, unit_price: 490.00, subtotal: 490.00 },
+                { order_item_id: 11, order_id: 108, ebook_id: 10, quantity: 1, unit_price: 280.00, subtotal: 280.00 },
+                { order_item_id: 12, order_id: 109, ebook_id: 1, quantity: 1, unit_price: 350.00, subtotal: 350.00 },
+                { order_item_id: 13, order_id: 110, ebook_id: 8, quantity: 1, unit_price: 490.00, subtotal: 490.00 },
+                { order_item_id: 14, order_id: 110, ebook_id: 6, quantity: 1, unit_price: 250.00, subtotal: 250.00 },
+                { order_item_id: 15, order_id: 111, ebook_id: 7, quantity: 1, unit_price: 899.00, subtotal: 899.00 },
+                { order_item_id: 16, order_id: 112, ebook_id: 5, quantity: 1, unit_price: 320.00, subtotal: 320.00 },
+                { order_item_id: 17, order_id: 113, ebook_id: 4, quantity: 1, unit_price: 450.00, subtotal: 450.00 },
+                { order_item_id: 18, order_id: 113, ebook_id: 9, quantity: 1, unit_price: 380.00, subtotal: 380.00 },
+                { order_item_id: 19, order_id: 114, ebook_id: 8, quantity: 1, unit_price: 490.00, subtotal: 490.00 },
+                { order_item_id: 20, order_id: 115, ebook_id: 3, quantity: 1, unit_price: 199.00, subtotal: 199.00 },
+                { order_item_id: 21, order_id: 115, ebook_id: 6, quantity: 1, unit_price: 250.00, subtotal: 250.00 },
+                { order_item_id: 22, order_id: 116, ebook_id: 2, quantity: 1, unit_price: 290.00, subtotal: 290.00 },
+                { order_item_id: 23, order_id: 117, ebook_id: 1, quantity: 1, unit_price: 350.00, subtotal: 350.00 },
+                { order_item_id: 24, order_id: 117, ebook_id: 4, quantity: 1, unit_price: 450.00, subtotal: 450.00 },
+                { order_item_id: 25, order_id: 118, ebook_id: 6, quantity: 1, unit_price: 250.00, subtotal: 250.00 },
+                { order_item_id: 26, order_id: 119, ebook_id: 4, quantity: 1, unit_price: 450.00, subtotal: 450.00 },
+                { order_item_id: 27, order_id: 120, ebook_id: 7, quantity: 1, unit_price: 899.00, subtotal: 899.00 },
+                { order_item_id: 28, order_id: 120, ebook_id: 1, quantity: 1, unit_price: 350.00, subtotal: 350.00 },
+                { order_item_id: 29, order_id: 121, ebook_id: 4, quantity: 1, unit_price: 450.00, subtotal: 450.00 },
+                { order_item_id: 30, order_id: 122, ebook_id: 1, quantity: 1, unit_price: 350.00, subtotal: 350.00 },
+                { order_item_id: 31, order_id: 123, ebook_id: 10, quantity: 1, unit_price: 280.00, subtotal: 280.00 },
+                { order_item_id: 32, order_id: 124, ebook_id: 8, quantity: 1, unit_price: 490.00, subtotal: 490.00 },
+                { order_item_id: 33, order_id: 125, ebook_id: 7, quantity: 1, unit_price: 899.00, subtotal: 899.00 },
+                { order_item_id: 34, order_id: 125, ebook_id: 5, quantity: 1, unit_price: 320.00, subtotal: 320.00 },
+                { order_item_id: 35, order_id: 126, ebook_id: 9, quantity: 1, unit_price: 380.00, subtotal: 380.00 },
+                { order_item_id: 36, order_id: 127, ebook_id: 2, quantity: 1, unit_price: 290.00, subtotal: 290.00 },
+                { order_item_id: 37, order_id: 127, ebook_id: 6, quantity: 1, unit_price: 250.00, subtotal: 250.00 },
+                { order_item_id: 38, order_id: 128, ebook_id: 7, quantity: 1, unit_price: 899.00, subtotal: 899.00 },
+                { order_item_id: 39, order_id: 129, ebook_id: 5, quantity: 1, unit_price: 320.00, subtotal: 320.00 },
+                { order_item_id: 40, order_id: 130, ebook_id: 5, quantity: 2, unit_price: 320.00, subtotal: 640.00 },
+                { order_item_id: 41, order_id: 131, ebook_id: 1, quantity: 1, unit_price: 350.00, subtotal: 350.00 },
+                { order_item_id: 42, order_id: 132, ebook_id: 4, quantity: 1, unit_price: 450.00, subtotal: 450.00 }
+            ],
+            payments: [
+                { payment_id: 1, order_id: 101, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-01 10:18:00" },
+                { payment_id: 2, order_id: 102, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-01 14:22:00" },
+                { payment_id: 3, order_id: 103, payment_method: "Credit Card", slip_image: "", payment_status: "success", paid_at: "2026-09-02 09:46:00" },
+                { payment_id: 4, order_id: 104, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-02 11:32:00" },
+                { payment_id: 5, order_id: 105, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-03 13:12:00" },
+                { payment_id: 6, order_id: 106, payment_method: "Bank Transfer", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-04 15:58:00" },
+                { payment_id: 7, order_id: 107, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-05 16:42:00" },
+                { payment_id: 8, order_id: 108, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-06 18:28:00" },
+                { payment_id: 9, order_id: 109, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-07 08:32:00" },
+                { payment_id: 10, order_id: 110, payment_method: "Credit Card", slip_image: "", payment_status: "success", paid_at: "2026-09-08 12:16:00" },
+                { payment_id: 11, order_id: 111, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-09 14:52:00" },
+                { payment_id: 12, order_id: 112, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-10 17:08:00" },
+                { payment_id: 13, order_id: 113, payment_method: "Bank Transfer", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-11 19:44:00" },
+                { payment_id: 14, order_id: 114, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-12 11:23:00" },
+                { payment_id: 15, order_id: 115, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-13 13:38:00" },
+                { payment_id: 16, order_id: 116, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-14 15:13:00" },
+                { payment_id: 17, order_id: 117, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-15 16:48:00" },
+                { payment_id: 18, order_id: 118, payment_method: "Credit Card", slip_image: "", payment_status: "success", paid_at: "2026-09-16 10:26:00" },
+                { payment_id: 19, order_id: 119, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-17 12:02:00" },
+                { payment_id: 20, order_id: 120, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-18 14:18:00" },
+                { payment_id: 21, order_id: 121, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-19 16:32:00" },
+                { payment_id: 22, order_id: 122, payment_method: "Bank Transfer", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-20 18:08:00" },
+                { payment_id: 23, order_id: 123, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-21 09:12:00" },
+                { payment_id: 24, order_id: 124, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-22 11:48:00" },
+                { payment_id: 25, order_id: 125, payment_method: "Credit Card", slip_image: "", payment_status: "success", paid_at: "2026-09-23 13:52:00" },
+                { payment_id: 26, order_id: 126, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-24 15:22:00" },
+                { payment_id: 27, order_id: 127, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-25 17:38:00" },
+                { payment_id: 28, order_id: 128, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "success", paid_at: "2026-09-26 19:18:00" },
+                { payment_id: 29, order_id: 129, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "waiting_verify", paid_at: "2026-09-27 10:02:00" },
+                { payment_id: 30, order_id: 130, payment_method: "Bank Transfer", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "waiting_verify", paid_at: "2026-09-27 13:22:00" },
+                { payment_id: 31, order_id: 131, payment_method: "PromptPay QR", slip_image: "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500", payment_status: "waiting_verify", paid_at: "2026-09-28 15:42:00" },
+                { payment_id: 32, order_id: 132, payment_method: "PromptPay QR", slip_image: "", payment_status: "rejected", paid_at: "2026-09-28 17:02:00" }
+            ],
+            download_links: [
+                { download_id: 1, order_id: 101, ebook_id: 1, download_token: "dl_token_101_1_a8f9c2", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 2, order_id: 102, ebook_id: 7, download_token: "dl_token_102_7_b7e3d1", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 3, order_id: 103, ebook_id: 3, download_token: "dl_token_103_3_c4b2a9", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 4, order_id: 103, ebook_id: 6, download_token: "dl_token_103_6_d1e8f7", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 5, order_id: 104, ebook_id: 4, download_token: "dl_token_104_4_e9a3b5", expire_at: "2026-12-31 23:59:59", download_count: 3, max_downloads: 5 },
+                { download_id: 6, order_id: 105, ebook_id: 9, download_token: "dl_token_105_9_f2c7d4", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 7, order_id: 106, ebook_id: 1, download_token: "dl_token_106_1_g5h6j7", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 8, order_id: 106, ebook_id: 5, download_token: "dl_token_106_5_k8l9m0", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 9, order_id: 107, ebook_id: 3, download_token: "dl_token_107_3_n1p2q3", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 10, order_id: 108, ebook_id: 8, download_token: "dl_token_108_8_r4s5t6", expire_at: "2026-12-31 23:59:59", download_count: 4, max_downloads: 5 },
+                { download_id: 11, order_id: 108, ebook_id: 10, download_token: "dl_token_108_10_u7v8w9", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 12, order_id: 109, ebook_id: 1, download_token: "dl_token_109_1_x0y1z2", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 13, order_id: 110, ebook_id: 8, download_token: "dl_token_110_8_a3b4c5", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 14, order_id: 110, ebook_id: 6, download_token: "dl_token_110_6_d6e7f8", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 15, order_id: 111, ebook_id: 7, download_token: "dl_token_111_7_g9h0j1", expire_at: "2026-12-31 23:59:59", download_count: 3, max_downloads: 5 },
+                { download_id: 16, order_id: 112, ebook_id: 5, download_token: "dl_token_112_5_k2l3m4", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 17, order_id: 113, ebook_id: 4, download_token: "dl_token_113_4_n5p6q7", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 18, order_id: 113, ebook_id: 9, download_token: "dl_token_113_9_r8s9t0", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 19, order_id: 114, ebook_id: 8, download_token: "dl_token_114_8_u1v2w3", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 20, order_id: 115, ebook_id: 3, download_token: "dl_token_115_3_x4y5z6", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 21, order_id: 115, ebook_id: 6, download_token: "dl_token_115_6_a7b8c9", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 22, order_id: 116, ebook_id: 2, download_token: "dl_token_116_2_d0e1f2", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 23, order_id: 117, ebook_id: 1, download_token: "dl_token_117_1_g3h4j5", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 24, order_id: 117, ebook_id: 4, download_token: "dl_token_117_4_k6l7m8", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 25, order_id: 118, ebook_id: 6, download_token: "dl_token_118_6_n9p0q1", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 26, order_id: 119, ebook_id: 4, download_token: "dl_token_119_4_r2s3t4", expire_at: "2026-12-31 23:59:59", download_count: 3, max_downloads: 5 },
+                { download_id: 27, order_id: 120, ebook_id: 7, download_token: "dl_token_120_7_u5v6w7", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 28, order_id: 120, ebook_id: 1, download_token: "dl_token_120_1_x8y9z0", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 29, order_id: 121, ebook_id: 4, download_token: "dl_token_121_4_a1b2c3", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 30, order_id: 122, ebook_id: 1, download_token: "dl_token_122_1_d4e5f6", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 31, order_id: 123, ebook_id: 10, download_token: "dl_token_123_10_g7h8j9", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 32, order_id: 124, ebook_id: 8, download_token: "dl_token_124_8_k0l1m2", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 33, order_id: 125, ebook_id: 7, download_token: "dl_token_125_7_n3p4q5", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 34, order_id: 125, ebook_id: 5, download_token: "dl_token_125_5_r6s7t8", expire_at: "2026-12-31 23:59:59", download_count: 0, max_downloads: 5 },
+                { download_id: 35, order_id: 126, ebook_id: 9, download_token: "dl_token_126_9_u9v0w1", expire_at: "2026-12-31 23:59:59", download_count: 2, max_downloads: 5 },
+                { download_id: 36, order_id: 127, ebook_id: 2, download_token: "dl_token_127_2_x2y3z4", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 37, order_id: 127, ebook_id: 6, download_token: "dl_token_127_6_a5b6c7", expire_at: "2026-12-31 23:59:59", download_count: 1, max_downloads: 5 },
+                { download_id: 38, order_id: 128, ebook_id: 7, download_token: "dl_token_128_7_d8e9f0", expire_at: "2026-12-31 23:59:59", download_count: 4, max_downloads: 5 }
+            ]
+        };
+
+        // ตรวจสอบและโหลดข้อมูลเข้า LocalStorage
+        const DB_STORAGE_KEY = 'ebookgenz_db_8tables';
+        let db = JSON.parse(localStorage.getItem(DB_STORAGE_KEY));
+
+        if (!db || !db.orders || db.orders.length === 0) {
+            db = JSON.parse(JSON.stringify(DEFAULT_SEED_DATA));
+            saveDatabase();
+        }
+
+        // บันทึกฐานข้อมูลลง localStorage พร้อมซิงค์ข้ามระบบ
+        function saveDatabase() {
+            localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+            syncToSystemLocalStorage();
+            updateStatCounters();
+        }
+
+        // ซิงค์ข้อมูลกับคีย์เดิมของโปรเจกต์ เพื่อให้หน้าร้านและหน้าอื่นอัปเดตแบบเรียลไทม์
+        function syncToSystemLocalStorage() {
+            // 1. ซิงค์ E-Books (สำหรับ index.html, admin.html, admin_ebooks.html)
+            const syncedEbooks = db.ebooks.map(b => {
+                const cat = db.categories.find(c => c.category_id === b.category_id);
+                return {
+                    id: b.ebook_id,
+                    title: b.title,
+                    author: b.author,
+                    price: b.price,
+                    category: cat ? cat.category_slug : 'general',
+                    cover: b.cover_image,
+                    description: b.description,
+                    file: b.file_url,
+                    status: b.is_active === 1 ? 'ready' : 'hidden'
+                };
+            });
+            localStorage.setItem('ebooks_data_genz', JSON.stringify(syncedEbooks));
+
+            // 2. ซิงค์ Users (สำหรับ auth.js, login.html)
+            const syncedUsers = db.users.map(u => {
+                const role = db.roles.find(r => r.role_id === u.role_id);
+                return {
+                    id: u.user_id,
+                    username: u.username,
+                    password: u.password_hash.includes('123') ? '123' : '123',
+                    role: role ? role.role_name : 'customer',
+                    fullName: u.full_name,
+                    email: u.email,
+                    phone: u.phone
+                };
+            });
+            localStorage.setItem('users_ebookgenz', JSON.stringify(syncedUsers));
+
+            // 3. ซิงค์ Orders (สำหรับ cart.html, admin.html, reports.html, downloads.html)
+            const syncedOrders = db.orders.map(o => {
+                const user = db.users.find(u => u.user_id === o.user_id);
+                const items = db.order_items.filter(oi => oi.order_id === o.order_id).map(oi => {
+                    const book = db.ebooks.find(b => b.ebook_id === oi.ebook_id);
+                    return {
+                        id: oi.ebook_id,
+                        title: book ? book.title : 'หนังสือ #' + oi.ebook_id,
+                        price: oi.unit_price,
+                        quantity: oi.quantity,
+                        cover: book ? book.cover_image : ''
+                    };
+                });
+                const payment = db.payments.find(p => p.order_id === o.order_id);
+
+                return {
+                    orderId: o.order_id,
+                    userId: o.user_id,
+                    userName: user ? user.full_name : 'ผู้ใช้ #' + o.user_id,
+                    items: items,
+                    total: o.total_amount,
+                    status: o.order_status,
+                    date: o.order_date,
+                    slipImage: payment ? payment.slip_image : '',
+                    method: payment ? payment.payment_method : 'PromptPay QR'
+                };
+            });
+            localStorage.setItem('orders_ebookgenz', JSON.stringify(syncedOrders));
+            localStorage.setItem('orders_ebooks_genz', JSON.stringify(syncedOrders));
+        }
+
+        // =====================================================================
+        // นิยาม Metadata และคอลัมน์ของทั้ง 8 ตาราง
+        // =====================================================================
+        const TABLE_SCHEMAS = {
+            roles: {
+                title: "roles (บทบาทผู้ใช้งาน)",
+                desc: "กำหนดสิทธิ์ระดับผู้ใช้งาน เช่น Admin, Customer, Staff",
+                pk: "role_id",
+                fkInfo: "ตารางแม่ (ไม่มี Foreign Key ขาเข้า)",
+                columns: [
+                    { name: "role_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "role_name", label: "ชื่อบทบาท (Unique)", type: "text", required: true },
+                    { name: "description", label: "คำอธิบายสิทธิ์", type: "text", required: false }
+                ]
+            },
+            users: {
+                title: "users (ข้อมูลสมาชิกและผู้ใช้)",
+                desc: "บันทึกบัญชีผู้ใช้ บัญชีลูกค้า และบทบาทในระบบ",
+                pk: "user_id",
+                fkInfo: "role_id -> roles(role_id)",
+                columns: [
+                    { name: "user_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "role_id", label: "บทบาท (FK)", type: "foreign", refTable: "roles", refKey: "role_id", refLabel: "role_name", required: true },
+                    { name: "username", label: "ชื่อผู้ใช้ (Username)", type: "text", required: true },
+                    { name: "email", label: "อีเมล", type: "email", required: true },
+                    { name: "password_hash", label: "รหัสผ่าน (Hash)", type: "text", required: true },
+                    { name: "full_name", label: "ชื่อ-นามสกุล", type: "text", required: true },
+                    { name: "phone", label: "เบอร์โทร", type: "text", required: false },
+                    { name: "created_at", label: "วันที่สมัคร", type: "datetime", defaultNow: true }
+                ]
+            },
+            categories: {
+                title: "categories (หมวดหมู่หนังสือ)",
+                desc: "การจัดกลุ่ม E-Book ตามประเภทเนื้อหา",
+                pk: "category_id",
+                fkInfo: "ตารางแม่สำหรับ ebooks",
+                columns: [
+                    { name: "category_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "category_name", label: "ชื่อหมวดหมู่", type: "text", required: true },
+                    { name: "category_slug", label: "Slug", type: "text", required: true },
+                    { name: "description", label: "รายละเอียด", type: "text", required: false },
+                    { name: "icon", label: "ไอคอน", type: "text", required: false, default: "📚" }
+                ]
+            },
+            ebooks: {
+                title: "ebooks (รายการหนังสืออีบุ๊ก)",
+                desc: "ข้อมูลหนังสือดิจิทัล ราคา ผู้แต่ง ลิงก์ไฟล์ และภาพปก",
+                pk: "ebook_id",
+                fkInfo: "category_id -> categories(category_id)",
+                columns: [
+                    { name: "ebook_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "category_id", label: "หมวดหมู่ (FK)", type: "foreign", refTable: "categories", refKey: "category_id", refLabel: "category_name", required: true },
+                    { name: "title", label: "ชื่อหนังสือ", type: "text", required: true },
+                    { name: "author", label: "ผู้แต่ง", type: "text", required: true },
+                    { name: "price", label: "ราคา (฿)", type: "number", step: "0.01", min: 0, required: true },
+                    { name: "description", label: "คำอธิบาย", type: "textarea", required: false },
+                    { name: "cover_image", label: "ลิงก์ภาพปก (URL)", type: "image", required: false },
+                    { name: "file_url", label: "ลิงก์ไฟล์ PDF", type: "text", required: true, default: "files/sample.pdf" },
+                    { name: "is_active", label: "สถานะขาย", type: "select", options: [{val: 1, label: "🟢 พร้อมขาย (1)"}, {val: 0, label: "🔴 ปิดการขาย (0)"}], required: true, default: 1 },
+                    { name: "created_at", label: "วันที่ลงขาย", type: "datetime", defaultNow: true }
+                ]
+            },
+            orders: {
+                title: "orders (คำสั่งซื้อ)",
+                desc: "ข้อมูลใบสั่งซื้อ สถานะ และยอดรวม",
+                pk: "order_id",
+                fkInfo: "user_id -> users(user_id)",
+                columns: [
+                    { name: "order_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "user_id", label: "ลูกค้า (FK)", type: "foreign", refTable: "users", refKey: "user_id", refLabel: "full_name", required: true },
+                    { name: "total_amount", label: "ยอดรวม (฿)", type: "number", step: "0.01", min: 0, required: true },
+                    { name: "order_status", label: "สถานะออเดอร์", type: "select", options: [{val: "pending", label: "⏳ pending (รอตรวจ)"}, {val: "confirmed", label: "✅ confirmed (ยืนยัน)"}, {val: "cancelled", label: "❌ cancelled (ยกเลิก)"}], required: true, default: "pending" },
+                    { name: "order_date", label: "วันที่สั่งซื้อ", type: "datetime", defaultNow: true }
+                ]
+            },
+            order_items: {
+                title: "order_items (รายการสินค้าในคำสั่งซื้อ)",
+                desc: "แตกรายการหนังสือแต่ละเล่มในออเดอร์ (3NF Cardinality N:M Resolved)",
+                pk: "order_item_id",
+                fkInfo: "order_id -> orders(order_id) | ebook_id -> ebooks(ebook_id)",
+                columns: [
+                    { name: "order_item_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "order_id", label: "ออเดอร์ (FK)", type: "foreign", refTable: "orders", refKey: "order_id", refLabel: "order_id", labelPrefix: "ออเดอร์ #", required: true },
+                    { name: "ebook_id", label: "หนังสือ (FK)", type: "foreign", refTable: "ebooks", refKey: "ebook_id", refLabel: "title", required: true },
+                    { name: "quantity", label: "จำนวน", type: "number", min: 1, required: true, default: 1 },
+                    { name: "unit_price", label: "ราคาต่อหน่วย (฿)", type: "number", step: "0.01", min: 0, required: true },
+                    { name: "subtotal", label: "ราคารวม (฿)", type: "number", step: "0.01", min: 0, required: true }
+                ]
+            },
+            payments: {
+                title: "payments (ข้อมูลการชำระเงิน)",
+                desc: "บันทึกวิธีชำระ สลิปโอนเงิน และสถานะการตรวจสอบ",
+                pk: "payment_id",
+                fkInfo: "order_id -> orders(order_id) [Unique 1:1]",
+                columns: [
+                    { name: "payment_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "order_id", label: "ออเดอร์ (FK/Unique)", type: "foreign", refTable: "orders", refKey: "order_id", refLabel: "order_id", labelPrefix: "ออเดอร์ #", required: true },
+                    { name: "payment_method", label: "ช่องทางชำระ", type: "select", options: [{val: "PromptPay QR", label: "PromptPay QR"}, {val: "Bank Transfer", label: "Bank Transfer"}, {val: "Credit Card", label: "Credit Card"}], required: true, default: "PromptPay QR" },
+                    { name: "slip_image", label: "รูปสลิป (URL/Base64)", type: "image", required: false },
+                    { name: "payment_status", label: "สถานะชำระเงิน", type: "select", options: [{val: "waiting_verify", label: "⏳ waiting_verify"}, {val: "success", label: "✅ success"}, {val: "rejected", label: "❌ rejected"}], required: true, default: "waiting_verify" },
+                    { name: "paid_at", label: "เวลาที่ชำระ", type: "datetime", defaultNow: true }
+                ]
+            },
+            download_links: {
+                title: "download_links (สิทธิ์และลิงก์ดาวน์โหลด)",
+                desc: "โทเคนดาวน์โหลดที่ปลอดภัย เข้าถึงได้เฉพาะเมื่อคำสั่งซื้อ confirmed",
+                pk: "download_id",
+                fkInfo: "order_id -> orders(order_id) | ebook_id -> ebooks(ebook_id)",
+                columns: [
+                    { name: "download_id", label: "ID (PK)", type: "number", isPk: true, autoIncrement: true },
+                    { name: "order_id", label: "ออเดอร์ (FK)", type: "foreign", refTable: "orders", refKey: "order_id", refLabel: "order_id", labelPrefix: "ออเดอร์ #", required: true },
+                    { name: "ebook_id", label: "หนังสือ (FK)", type: "foreign", refTable: "ebooks", refKey: "ebook_id", refLabel: "title", required: true },
+                    { name: "download_token", label: "Download Token", type: "text", required: true },
+                    { name: "expire_at", label: "วันหมดอายุ", type: "datetime", required: true, default: "2026-12-31 23:59:59" },
+                    { name: "download_count", label: "โหลดแล้ว (ครั้ง)", type: "number", min: 0, required: true, default: 0 },
+                    { name: "max_downloads", label: "สิทธิ์สูงสุด (ครั้ง)", type: "number", min: 1, required: true, default: 5 }
+                ]
+            }
+        };
+
+        // สถานะการทำงานปัจจุบัน
+        let currentTableName = 'ebooks';
+        let currentSearchQuery = '';
+        let editingRowId = null;
+
+        // สลับตาราง
+        function switchTable(tableName) {
+            currentTableName = tableName;
+            currentSearchQuery = '';
+            document.getElementById('table-search-input').value = '';
+
+            // อัปเดตสไตล์ปุ่มแท็บ
+            Object.keys(TABLE_SCHEMAS).forEach(t => {
+                const btn = document.getElementById(`nav-tab-${t}`);
+                if (!btn) return;
+                if (t === tableName) {
+                    btn.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md shadow-sky-500/20 font-black";
+                } else {
+                    btn.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500 font-bold";
+                }
+            });
+
+            // อัปเดตหัวข้อตาราง
+            const schema = TABLE_SCHEMAS[tableName];
+            document.getElementById('active-table-title').innerHTML = `ตาราง: <span class="text-sky-400 font-mono">${tableName}</span>`;
+            document.getElementById('active-table-desc-badge').innerText = schema.desc;
+            document.getElementById('active-table-info').innerHTML = `คีย์หลัก: <span class="font-mono text-amber-300">${schema.pk}</span> | ข้อมูลความสัมพันธ์: <span class="font-mono text-sky-300">${schema.fkInfo}</span>`;
+
+            renderTableData();
+            updateSqlInspector(`SELECT * FROM ${tableName} ORDER BY ${schema.pk} ASC;`);
+        }
+
+        // เรนเดอร์หัวและแถวของตารางข้อมูล
+        function renderTableData() {
+            const schema = TABLE_SCHEMAS[currentTableName];
+            const dataList = db[currentTableName] || [];
+            const thead = document.getElementById('grid-table-head');
+            const tbody = document.getElementById('grid-table-body');
+
+            // 1. เรนเดอร์ Thead
+            let headHtml = '<tr>';
+            schema.columns.forEach(col => {
+                let badge = col.isPk ? ' <span class="text-[10px] text-amber-400 font-mono bg-amber-400/10 px-1 rounded">PK</span>' :
+                            col.type === 'foreign' ? ' <span class="text-[10px] text-sky-400 font-mono bg-sky-400/10 px-1 rounded">FK</span>' : '';
+                headHtml += `<th class="py-3.5 px-4 whitespace-nowrap">${col.label}${badge}</th>`;
+            });
+            headHtml += `<th class="py-3.5 px-4 text-center whitespace-nowrap">จัดการ (Actions)</th></tr>`;
+            thead.innerHTML = headHtml;
+
+            // 2. กรองข้อมูลตามคำค้นหา
+            let filtered = dataList.filter(row => {
+                if (!currentSearchQuery) return true;
+                return Object.values(row).some(val => 
+                    String(val).toLowerCase().includes(currentSearchQuery.toLowerCase())
+                );
+            });
+
+            // 3. เรนเดอร์ Tbody
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${schema.columns.length + 1}" class="text-center py-12 text-slate-500 font-medium">ไม่พบข้อมูลในตาราง ${currentTableName}</td></tr>`;
+                document.getElementById('grid-row-summary').innerText = `แสดง 0 จากทั้งหมด ${dataList.length} แถว`;
+                return;
+            }
+
+            filtered.forEach(row => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-750 hover:bg-slate-700/40 transition border-b border-slate-700/40";
+
+                let rowHtml = '';
+                schema.columns.forEach(col => {
+                    let val = row[col.name];
+                    rowHtml += `<td class="py-3 px-4">${formatCellDisplay(col, val, row)}</td>`;
+                });
+
+                // ปุ่มแก้ไขและลบ
+                const pkVal = row[schema.pk];
+                rowHtml += `
+                    <td class="py-3 px-4 text-center whitespace-nowrap space-x-1.5">
+                        <button onclick="openEditModal(${pkVal})" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-xl transition text-[11px] font-bold">✏️ แก้ไข</button>
+                        <button onclick="deleteRecord(${pkVal})" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-xl transition text-[11px] font-bold">🗑️ ลบ</button>
+                    </td>
+                `;
+
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('grid-row-summary').innerText = `แสดง ${filtered.length} จากทั้งหมด ${dataList.length} แถวในตาราง ${currentTableName}`;
+        }
+
+        // จัดรูปแบบการแสดงผลในเซลล์
+        function formatCellDisplay(col, val, row) {
+            if (val === undefined || val === null || val === '') {
+                return '<span class="text-slate-600 font-mono text-[11px]">NULL</span>';
+            }
+
+            // ถ้าเป็นรูปภาพ (ภาพปก หรือ สลิป)
+            if (col.type === 'image') {
+                return `
+                    <div class="flex items-center space-x-2">
+                        <img src="${val}" alt="Thumb" class="w-8 h-10 object-cover rounded-md border border-slate-700 cursor-pointer shadow hover:scale-110 transition" onclick="openImagePreview('${val}', '${row.title || 'รูปภาพ'}')">
+                        <span class="text-[10px] text-slate-400 truncate max-w-[120px] font-mono">${val}</span>
+                    </div>
+                `;
+            }
+
+            // ถ้าเป็นราคา
+            if (col.name === 'price' || col.name === 'total_amount' || col.name === 'unit_price' || col.name === 'subtotal') {
+                return `<span class="font-bold text-emerald-400 font-mono">฿${Number(val).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>`;
+            }
+
+            // ถ้าเป็นสถานะออเดอร์
+            if (col.name === 'order_status') {
+                if (val === 'confirmed') return `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-black">✅ confirmed</span>`;
+                if (val === 'pending') return `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-black">⏳ pending</span>`;
+                return `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-black">❌ cancelled</span>`;
+            }
+
+            // ถ้าเป็นสถานะชำระเงิน
+            if (col.name === 'payment_status') {
+                if (val === 'success') return `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-black">✅ success</span>`;
+                if (val === 'waiting_verify') return `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full text-[10px] font-black">⏳ waiting_verify</span>`;
+                return `<span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full text-[10px] font-black">❌ rejected</span>`;
+            }
+
+            // ถ้าเป็นสถานะเปิดขายหนังสือ
+            if (col.name === 'is_active') {
+                return val == 1 
+                    ? `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-bold">🟢 พร้อมขาย (1)</span>`
+                    : `<span class="bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full text-[10px] font-bold">🔴 ปิดขาย (0)</span>`;
+            }
+
+            // ถ้าเป็น Foreign Key: แสดงชื่อที่เชื่อมโยงเพื่อความเข้าใจง่าย
+            if (col.type === 'foreign') {
+                const targetList = db[col.refTable] || [];
+                const target = targetList.find(item => item[col.refKey] == val);
+                let label = target ? (target[col.refLabel] || '') : '';
+                return `
+                    <div>
+                        <span class="font-mono text-sky-400 font-bold">#${val}</span>
+                        ${label ? `<span class="text-[11px] text-slate-400 ml-1">(${label})</span>` : ''}
+                    </div>
+                `;
+            }
+
+            // ถ้าเป็น Primary Key
+            if (col.isPk) {
+                return `<span class="font-mono font-bold text-amber-400">#${val}</span>`;
+            }
+
+            // ข้อความธรรมดา ตัดคำถ้าวยาวเกิน
+            const strVal = String(val);
+            if (strVal.length > 50) {
+                return `<span title="${strVal}">${strVal.substring(0, 48)}...</span>`;
+            }
+            return strVal;
+        }
+
+        // =====================================================================
+        // CRUD: Modal สำหรับ เพิ่ม (Add) และ แก้ไข (Edit)
+        // =====================================================================
+        function openAddModal() {
+            editingRowId = null;
+            const schema = TABLE_SCHEMAS[currentTableName];
+            document.getElementById('modal-title').innerText = `+ เพิ่มข้อมูลในตาราง ${currentTableName}`;
+            document.getElementById('modal-subtitle').innerText = `สร้างระเบียนใหม่ (Record) ตามกฎความสัมพันธ์ของฐานข้อมูล`;
+            document.getElementById('modal-save-btn').innerText = `🚀 เพิ่มข้อมูลใหม่`;
+
+            buildModalFormFields({});
+            document.getElementById('crud-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(pkVal) {
+            editingRowId = pkVal;
+            const schema = TABLE_SCHEMAS[currentTableName];
+            const dataList = db[currentTableName] || [];
+            const row = dataList.find(r => r[schema.pk] === pkVal);
+
+            if (!row) {
+                alert('ไม่พบข้อมูลระเบียนนี้');
+                return;
+            }
+
+            document.getElementById('modal-title').innerText = `✏️ แก้ไขข้อมูลตาราง ${currentTableName} (#${pkVal})`;
+            document.getElementById('modal-subtitle').innerText = `แก้ไขค่าในคอลัมน์ของระเบียนนี้`;
+            document.getElementById('modal-save-btn').innerText = `💾 บันทึกการแก้ไข`;
+
+            buildModalFormFields(row);
+            document.getElementById('crud-modal').classList.remove('hidden');
+        }
+
+        function closeCrudModal() {
+            document.getElementById('crud-modal').classList.add('hidden');
+        }
+
+        // สร้างช่องกรอกฟอร์มแบบไดนามิกตาม Schema
+        function buildModalFormFields(rowData) {
+            const schema = TABLE_SCHEMAS[currentTableName];
+            const container = document.getElementById('modal-fields-container');
+            container.innerHTML = '';
+
+            schema.columns.forEach(col => {
+                // ถ้าเป็น PK และกำลังสร้างใหม่ ให้ข้ามไป (Auto-increment)
+                if (col.isPk && editingRowId === null) {
+                    return;
+                }
+
+                const fieldGroup = document.createElement('div');
+                fieldGroup.className = "flex flex-col space-y-1";
+
+                const label = document.createElement('label');
+                label.className = "font-bold text-slate-300 text-xs";
+                label.innerText = col.label + (col.required ? ' *' : '');
+                fieldGroup.appendChild(label);
+
+                const currentVal = rowData[col.name] !== undefined ? rowData[col.name] : (col.default !== undefined ? col.default : '');
+
+                // 1. ถ้าเป็น Foreign Key: สร้าง Dropdown ดึงรายการจากตารางที่เชื่อมโยง
+                if (col.type === 'foreign') {
+                    const select = document.createElement('select');
+                    select.name = col.name;
+                    select.className = "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 font-mono text-xs";
+                    if (col.required) select.required = true;
+
+                    const refList = db[col.refTable] || [];
+                    refList.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item[col.refKey];
+                        const prefix = col.labelPrefix || '';
+                        opt.text = `${prefix}${item[col.refKey]} - ${item[col.refLabel] || ''}`;
+                        if (String(item[col.refKey]) === String(currentVal)) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                    fieldGroup.appendChild(select);
+                }
+                // 2. ถ้าเป็น Dropdown Select ธรรมดา
+                else if (col.type === 'select') {
+                    const select = document.createElement('select');
+                    select.name = col.name;
+                    select.className = "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 text-xs";
+                    if (col.required) select.required = true;
+
+                    col.options.forEach(optData => {
+                        const opt = document.createElement('option');
+                        opt.value = optData.val;
+                        opt.text = optData.label;
+                        if (String(optData.val) === String(currentVal)) {
+                            opt.selected = true;
+                        }
+                        select.appendChild(opt);
+                    });
+                    fieldGroup.appendChild(select);
+                }
+                // 3. ถ้าเป็น Textarea
+                else if (col.type === 'textarea') {
+                    const textarea = document.createElement('textarea');
+                    textarea.name = col.name;
+                    textarea.rows = 3;
+                    textarea.className = "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 text-xs";
+                    textarea.value = currentVal;
+                    if (col.required) textarea.required = true;
+                    fieldGroup.appendChild(textarea);
+                }
+                // 4. ถ้าเป็น Input ทั่วไป
+                else {
+                    const input = document.createElement('input');
+                    input.name = col.name;
+                    input.type = col.type === 'number' ? 'number' : (col.type === 'email' ? 'email' : 'text');
+                    input.className = "bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 text-xs";
+                    if (col.step) input.step = col.step;
+                    if (col.min !== undefined) input.min = col.min;
+                    if (col.isPk) {
+                        input.readOnly = true;
+                        input.className += " opacity-60 cursor-not-allowed bg-slate-900";
+                    }
+                    if (col.required) input.required = true;
+                    input.value = currentVal;
+
+                    if (col.defaultNow && !currentVal) {
+                        input.value = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    }
+
+                    fieldGroup.appendChild(input);
+                }
+
+                container.appendChild(fieldGroup);
+            });
+        }
+
+        // จัดการ Submit ฟอร์ม (เพิ่ม หรือ แก้ไข)
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const schema = TABLE_SCHEMAS[currentTableName];
+            const dataList = db[currentTableName] || [];
+            const formData = new FormData(event.target);
+
+            const record = {};
+            schema.columns.forEach(col => {
+                if (col.isPk && editingRowId === null) {
+                    // คำนวณ Auto Increment ID
+                    const maxId = dataList.reduce((max, r) => Math.max(max, Number(r[schema.pk]) || 0), 0);
+                    record[col.name] = maxId + 1;
+                } else {
+                    let val = formData.get(col.name);
+                    if (col.type === 'number' || col.isPk) {
+                        val = val !== null && val !== '' ? Number(val) : 0;
+                    }
+                    record[col.name] = val;
+                }
+            });
+
+            // ตรวจสอบ Unique Constraints เบื้องต้น
+            if (currentTableName === 'roles') {
+                const dup = dataList.find(r => r.role_name === record.role_name && r.role_id !== editingRowId);
+                if (dup) { alert('ชื่อบทบาทนี้มีอยู่แล้วในระบบ (UNIQUE constraint)'); return; }
+            } else if (currentTableName === 'users') {
+                const dup = dataList.find(r => (r.username === record.username || r.email === record.email) && r.user_id !== editingRowId);
+                if (dup) { alert('Username หรือ Email นี้มีอยู่แล้วในระบบ (UNIQUE constraint)'); return; }
+            }
+
+            if (editingRowId === null) {
+                // INSERT
+                dataList.push(record);
+                saveDatabase();
+                renderTableData();
+                closeCrudModal();
+
+                const colsStr = Object.keys(record).join(', ');
+                const valsStr = Object.values(record).map(v => typeof v === 'string' ? `'${v}'` : v).join(', ');
+                updateSqlInspector(`INSERT INTO ${currentTableName} (${colsStr}) VALUES (${valsStr});`);
+                alert(`✅ เพิ่มข้อมูลลงตาราง ${currentTableName} เรียบร้อยแล้ว!`);
+            } else {
+                // UPDATE
+                const index = dataList.findIndex(r => r[schema.pk] === editingRowId);
+                if (index !== -1) {
+                    dataList[index] = record;
+                    saveDatabase();
+                    renderTableData();
+                    closeCrudModal();
+
+                    const setsStr = Object.entries(record)
+                        .filter(([k]) => k !== schema.pk)
+                        .map(([k, v]) => `${k} = ${typeof v === 'string' ? `'${v}'` : v}`)
+                        .join(', ');
+                    updateSqlInspector(`UPDATE ${currentTableName} SET ${setsStr} WHERE ${schema.pk} = ${editingRowId};`);
+                    alert(`✅ แก้ไขข้อมูลในตาราง ${currentTableName} (#${editingRowId}) สำเร็จ!`);
+                }
+            }
+        }
+
+        // =====================================================================
+        // CRUD: ลบข้อมูล (Delete)
+        // =====================================================================
+        function deleteRecord(pkVal) {
+            const schema = TABLE_SCHEMAS[currentTableName];
+            const dataList = db[currentTableName] || [];
+
+            // ตรวจสอบ Foreign Key Integrity ป้องกันข้อมูลกำพร้า (Cascade / Restrict)
+            if (currentTableName === 'roles') {
+                const hasUsers = (db.users || []).some(u => u.role_id === pkVal);
+                if (hasUsers) {
+                    alert('❌ ไม่สามารถลบบทบาทนี้ได้ เนื่องจากยังมีผู้ใช้งาน (users) เชื่อมโยงอยู่ (RESTRICT)');
+                    return;
+                }
+            } else if (currentTableName === 'categories') {
+                const hasBooks = (db.ebooks || []).some(b => b.category_id === pkVal);
+                if (hasBooks) {
+                    alert('❌ ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากยังมีหนังสือ (ebooks) ในหมวดนี้อยู่ (RESTRICT)');
+                    return;
+                }
+            } else if (currentTableName === 'orders') {
+                if (!confirm(`คุณต้องการลบคำสั่งซื้อ #${pkVal} ใช่หรือไม่?\n⚠️ การลบนี้จะ CASCADE ลบรายการย่อย (order_items), ข้อมูลชำระเงิน (payments) และลิงก์ดาวน์โหลดที่เกี่ยวข้องด้วย`)) {
+                    return;
+                }
+                // CASCADE DELETE
+                db.order_items = (db.order_items || []).filter(oi => oi.order_id !== pkVal);
+                db.payments = (db.payments || []).filter(p => p.order_id !== pkVal);
+                db.download_links = (db.download_links || []).filter(dl => dl.order_id !== pkVal);
+            } else {
+                if (!confirm(`ยืนยันการลบข้อมูล #${pkVal} จากตาราง ${currentTableName}?`)) {
+                    return;
+                }
+            }
+
+            // ลบ Record ออกจากตาราง
+            const index = dataList.findIndex(r => r[schema.pk] === pkVal);
+            if (index !== -1) {
+                dataList.splice(index, 1);
+                saveDatabase();
+                renderTableData();
+                updateSqlInspector(`DELETE FROM ${currentTableName} WHERE ${schema.pk} = ${pkVal};`);
+                alert(`🗑️ ลบข้อมูล #${pkVal} สำเร็จ`);
+            }
+        }
+
+        // ค้นหาในตาราง
+        function handleTableSearch() {
+            currentSearchQuery = document.getElementById('table-search-input').value.trim();
+            renderTableData();
+            if (currentSearchQuery) {
+                updateSqlInspector(`SELECT * FROM ${currentTableName} WHERE title/name LIKE '%${currentSearchQuery}%' OR id = '${currentSearchQuery}';`);
+            } else {
+                updateSqlInspector(`SELECT * FROM ${currentTableName} ORDER BY ${TABLE_SCHEMAS[currentTableName].pk} ASC;`);
+            }
+        }
+
+        // อัปเดตตัวนับข้อมูลแถบสรุป
+        function updateStatCounters() {
+            Object.keys(TABLE_SCHEMAS).forEach(tbl => {
+                const countEl = document.getElementById(`stat-count-${tbl}`);
+                const badgeEl = document.querySelector(`#nav-tab-${tbl} .count-badge`);
+                const len = (db[tbl] || []).length;
+                if (countEl) countEl.innerText = len;
+                if (badgeEl) badgeEl.innerText = len;
+            });
+        }
+
+        // อัปเดตกล่อง SQL Simulator Inspector
+        function updateSqlInspector(query) {
+            const el = document.getElementById('sql-inspector-text');
+            if (el) el.innerText = query;
+        }
+
+        function copyCurrentSQLQuery() {
+            const el = document.getElementById('sql-inspector-text');
+            if (el) {
+                navigator.clipboard.writeText(el.innerText);
+                alert('📋 คัดลอกคำสั่ง SQL เรียบร้อยแล้ว:\n' + el.innerText);
+            }
+        }
+
+        // รีเซ็ตฐานข้อมูลเป็น Seed Data 30+ รายการ
+        function confirmResetSeedData() {
+            if (confirm("⚠️ คุณต้องการรีเซ็ตข้อมูลทั้ง 8 ตารางกลับเป็นข้อมูลตัวอย่างเริ่มต้น (Seed Data มีออเดอร์ 32 รายการ) ใช่หรือไม่?\nข้อมูลที่คุณแก้ไขเพิ่มเติมจะถูกแทนที่ด้วยชุดข้อมูลมาตรฐานสำหรับการนำเสนอ")) {
+                db = JSON.parse(JSON.stringify(DEFAULT_SEED_DATA));
+                saveDatabase();
+                renderTableData();
+                updateSqlInspector(`-- ฐานข้อมูลถูกรีเซ็ตกลับเป็น Seed Data เรียบร้อยแล้ว (32 Orders, 8 Tables)`);
+                alert("🎉 รีเซ็ตข้อมูลฐานข้อมูล 8 ตารางสำเร็จ! พร้อมใช้งานนำเสนอ");
+            }
+        }
+
+        // ส่งออกฐานข้อมูลเป็นไฟล์ .sql
+        function exportSQLFile() {
+            let sql = `-- ====================================================================\n`;
+            sql += `-- EbookGenZ Database Export (8 Tables with Current Live Data)\n`;
+            sql += `-- Export Date: ${new Date().toLocaleString()}\n`;
+            sql += `-- ====================================================================\n\n`;
+
+            Object.keys(TABLE_SCHEMAS).forEach(tbl => {
+                const schema = TABLE_SCHEMAS[tbl];
+                const list = db[tbl] || [];
+                sql += `-- --------------------------------------------------------------------\n`;
+                sql += `-- Data for Table: ${tbl} (${list.length} rows)\n`;
+                sql += `-- --------------------------------------------------------------------\n`;
+
+                list.forEach(row => {
+                    const cols = Object.keys(row).join(', ');
+                    const vals = Object.values(row).map(v => {
+                        if (v === null || v === undefined) return 'NULL';
+                        if (typeof v === 'number') return v;
+                        return `'${String(v).replace(/'/g, "''")}'`;
+                    }).join(', ');
+
+                    sql += `INSERT INTO ${tbl} (${cols}) VALUES (${vals});\n`;
+                });
+                sql += `\n`;
+            });
+
+            const blob = new Blob([sql], { type: 'text/sql;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `ebookgenz_database_export_${Date.now()}.sql`;
+            link.click();
+        }
+
+        // คัดลอกคำสั่ง SQL ทั้งหมดลงคลิปบอร์ด
+        function copySQLInsertStatements() {
+            let sql = `-- EbookGenZ SQL Snapshot\n`;
+            Object.keys(TABLE_SCHEMAS).forEach(tbl => {
+                const list = db[tbl] || [];
+                list.forEach(row => {
+                    const cols = Object.keys(row).join(', ');
+                    const vals = Object.values(row).map(v => typeof v === 'number' ? v : `'${v}'`).join(', ');
+                    sql += `INSERT INTO ${tbl} (${cols}) VALUES (${vals});\n`;
+                });
+            });
+            navigator.clipboard.writeText(sql);
+            alert("📋 คัดลอกคำสั่ง SQL INSERT ทั้ง 8 ตารางลงคลิปบอร์ดแล้ว!");
+        }
+
+        // Lightbox Preview รูปภาพ
+        function openImagePreview(url, caption) {
+            document.getElementById('image-preview-img').src = url;
+            document.getElementById('image-preview-caption').innerText = caption || 'รูปภาพตัวอย่าง';
+            document.getElementById('image-preview-modal').classList.remove('hidden');
+        }
+
+        function closeImagePreview() {
+            document.getElementById('image-preview-modal').classList.add('hidden');
+        }
+
+        // โหลดข้อมูลเริ่มต้นเมื่อเปิดหน้า
+        window.addEventListener('DOMContentLoaded', () => {
+            updateStatCounters();
+            switchTable('ebooks'); // เริ่มต้นที่หน้า ebooks
+        });
+    </script>
+</body>
+</html>

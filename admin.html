@@ -16,8 +16,9 @@
             <div class="flex items-center space-x-3">
                 <span class="text-xl font-black tracking-wider text-slate-900">⚡ EbookGenZ <span class="text-xs bg-sky-100 text-sky-700 px-2.5 py-1 rounded-full font-black border border-sky-200">Admin Control</span></span>
             </div>
-            <div class="flex items-center space-x-6 text-sm font-semibold">
+            <div class="flex items-center space-x-4 text-sm font-semibold">
                 <span id="admin-name" class="text-slate-500 font-medium"></span>
+                <a href="admin_crud.html" class="bg-gradient-to-r from-indigo-500 to-sky-500 text-white px-3.5 py-1.5 rounded-xl font-black text-xs shadow-md shadow-indigo-500/20 hover:opacity-95 transition">🗄️ ฐานข้อมูล 8 ตาราง (CRUD)</a>
                 <a href="reports.html" class="text-sky-600 font-bold hover:underline">📊 รายงานวิเคราะห์</a>
                 <a href="index.html" class="text-slate-600 hover:text-sky-600 transition">กลับสู่หน้าร้านค้า</a>
                 <button onclick="logoutAdmin()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 px-3.5 py-1.5 rounded-xl border border-rose-200 transition font-black text-xs">ออกจากระบบ</button>
@@ -29,9 +30,14 @@
     <main class="container mx-auto px-6 py-10 max-w-6xl">
         
         <!-- Tab Navigation -->
-        <div class="flex space-x-4 mb-8 border-b border-sky-100 pb-4">
-            <button onclick="switchTab('orders')" id="btn-tab-orders" class="px-5 py-2.5 rounded-2xl font-black text-sm bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition">📦 จัดการคำสั่งซื้อ</button>
-            <button onclick="switchTab('ebooks')" id="btn-tab-ebooks" class="px-5 py-2.5 rounded-2xl font-bold text-sm text-slate-500 hover:text-slate-800 transition">📚 จัดการ E-Book (เพิ่ม/ลบ)</button>
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-8 border-b border-sky-100 pb-4">
+            <div class="flex space-x-3">
+                <button onclick="switchTab('orders')" id="btn-tab-orders" class="px-5 py-2.5 rounded-2xl font-black text-sm bg-gradient-to-r from-sky-400 to-blue-500 text-white shadow-md shadow-sky-500/20 transition">📦 จัดการคำสั่งซื้อ</button>
+                <button onclick="switchTab('ebooks')" id="btn-tab-ebooks" class="px-5 py-2.5 rounded-2xl font-bold text-sm text-slate-500 hover:text-slate-800 transition">📚 จัดการ E-Book (เพิ่ม/ลบ)</button>
+            </div>
+            <a href="admin_crud.html" class="px-4 py-2.5 rounded-2xl font-black text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm transition flex items-center gap-1.5">
+                <span>🗄️ เครื่องมือจัดการฐานข้อมูล 8 ตาราง (CRUD Studio) ↗</span>
+            </a>
         </div>
 
         <!-- TAB 1: จัดการคำสั่งซื้อ -->
