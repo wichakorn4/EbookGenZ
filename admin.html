@@ -127,6 +127,18 @@
 
     <script src="auth.js"></script>
     <script>
+
+        // 🧪 โค้ดจำลองข้อมูลออเดอร์พร้อมรูปสลิป สำหรับทดสอบหน้าแอดมิน
+window.addEventListener('DOMContentLoaded', () => {
+    let orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+    if (orders.length > 0 && !orders[0].slipImage) {
+        orders.forEach(o => {
+            o.slipImage = "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500";
+        });
+        localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
+    }
+});
+
         const user = getCurrentUser();
         if (!user || user.role !== 'admin') {
             alert('Access Denied: สำหรับผู้ดูแลระบบเท่านั้น');
@@ -188,9 +200,10 @@
                         <td class="py-4 px-6 font-black text-sky-600">฿${order.total}</td>
                         <td class="py-4 px-6">${statusBadge}</td>
                         <td class="py-4 px-6 text-center space-x-2">
-                            <button onclick="updateOrderStatus(${index}, 'confirmed')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">ยืนยัน</button>
-                            <button onclick="updateOrderStatus(${index}, 'cancelled')" class="bg-rose-500 hover:bg-rose-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">ยกเลิก</button>
-                        </td>
+                        <button onclick="viewSlip('${order.slipImage || ''}')" class="px-3 py-1.5 bg-sky-50 text-sky-600 hover:bg-sky-100 rounded-xl font-bold transition text-xs">ดูสลิป</button>
+                        <button onclick="updateOrderStatus(${index}, 'confirmed')" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold transition text-xs">ยืนยัน</button>
+                        <button onclick="updateOrderStatus(${index}, 'cancelled')" class="px-3 py-1.5 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-xl font-bold transition text-xs">ยกเลิก</button>
+                    </td>
                     </tr>
                 `;
             });
@@ -292,6 +305,39 @@ function updateBookStatus(bookId, newStatus) {
         }
 
         renderAdminOrders();
+
+// 🔍 ฟังก์ชันเปิด Modal ดูสลิป
+function viewSlip(slipUrl) {
+    const modal = document.getElementById('slip-modal');
+    const img = document.getElementById('slip-image-preview');
+    
+    if (slipUrl && slipUrl !== 'undefined' && slipUrl !== '') {
+        img.src = slipUrl;
+    } else {
+        img.src = "https://images.unsplash.com/photo-1556742049-0a67d553c2a5?w=500";
+    }
+    modal.classList.remove('hidden');
+}
+
+// ❌ ฟังก์ชันปิด Modal ดูสลิป
+function closeSlipModal() {
+    const modal = document.getElementById('slip-modal');
+    modal.classList.add('hidden');
+}
+
     </script>
+
+    <!-- 🖼️ Modal แสดงรูปสลิปการโอนเงิน -->
+<div id="slip-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center relative">
+        <h3 class="text-base font-black text-slate-900 mb-4">หลักฐานการชำระเงิน (สลิป)</h3>
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 mb-4 flex justify-center">
+            <img id="slip-image-preview" src="" alt="Slip Preview" class="max-h-96 object-contain rounded-xl shadow-sm">
+        </div>
+        <button onclick="closeSlipModal()" class="w-full bg-slate-900 text-white py-3 rounded-2xl font-bold text-xs hover:bg-slate-800 transition">
+            ปิดหน้าต่าง
+        </button>
+    </div>
+</div>
 </body>
 </html>
