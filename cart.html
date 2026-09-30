@@ -51,6 +51,35 @@
                         <option value="PromptPay">PromptPay QR Code</option>
                         <option value="Bank Transfer">โอนผ่านธนาคาร</option>
                     </select>
+
+                    <!-- 📱 กล่อง QR Code จำลอง -->
+    <div id="qr-code-section" class="hidden my-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl text-center">
+        <p class="text-xs font-bold text-sky-900 mb-2">สแกน QR Code เพื่อชำระเงิน</p>
+        <div class="bg-white p-3 inline-block rounded-xl shadow-sm border border-slate-100">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EbookGenZ-Payment-Simulation" alt="PromptPay QR" class="w-32 h-32 mx-auto">
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2">พร้อมเพย์: 081-234-5678 (EbookGenZ)</p>
+    </div>
+
+    <!-- 🏦 กล่องข้อมูลบัญชีธนาคารจำลอง (ซ่อนไว้ก่อน จะแสดงเฉพาะตอนเลือก Bank Transfer) -->
+<div id="bank-section" class="hidden my-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-left">
+    <p class="text-xs font-bold text-indigo-900 mb-2 text-center">โอนเงินผ่านบัญชีธนาคาร</p>
+    <div class="space-y-1.5 text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
+        <div class="flex justify-between">
+            <span class="text-slate-500">ธนาคาร:</span>
+            <span class="font-bold text-slate-900">กสิกรไทย (KBANK)</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-slate-500">เลขที่บัญชี:</span>
+            <span class="font-bold text-indigo-600 select-all">123-4-56789-0</span>
+        </div>
+        <div class="flex justify-between">
+            <span class="text-slate-500">ชื่อบัญชี:</span>
+            <span class="font-bold text-slate-900">บจก. อีบุ๊ค เจนซ์</span>
+        </div>
+    </div>
+</div>
+
                 </div>
 
                 <div class="mb-6">
@@ -136,6 +165,7 @@
                 return;
             }
 
+
             const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
             orders.push({
                 orderId: Date.now(),
@@ -153,6 +183,29 @@
             alert('สั่งซื้อสำเร็จ! รอผู้ดูแลระบบตรวจสอบสลิป 📦');
             window.location.href = 'downloads.html';
         }
+
+        // 🔄 ควบคุมการแสดง QR Code และบัญชีธนาคาร (วางไว้นอกฟังก์ชันใดๆ)
+const paymentSelect = document.getElementById('payment-method');
+const qrSection = document.getElementById('qr-code-section');
+const bankSection = document.getElementById('bank-section');
+
+if (paymentSelect) {
+    paymentSelect.addEventListener('change', function() {
+        // ซ่อนกล่องทั้งหมดก่อน
+        if (qrSection) qrSection.classList.add('hidden');
+        if (bankSection) bankSection.classList.add('hidden');
+
+        // แสดงกล่องตามวิธีที่เลือก
+        if (this.value === 'PromptPay' && qrSection) {
+            qrSection.classList.remove('hidden');
+        } else if (this.value === 'Bank Transfer' && bankSection) {
+            bankSection.classList.remove('hidden');
+        }
+    });
+}
+
+
+        
 
         renderCart();
         updateNavbarAuth();

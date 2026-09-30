@@ -52,6 +52,13 @@
         const cart = getUserCart();
         document.getElementById('cart-count').innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+        // 📥 ฟังก์ชันสำหรับจำลองการดาวน์โหลดไฟล์ PDF
+function downloadPDF(bookTitle) {
+    const dummyUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+    alert("กำลังดาวน์โหลดไฟล์ E-Book: " + bookTitle);
+    window.open(dummyUrl, '_blank');
+}
+
         function renderDownloads() {
             const container = document.getElementById('downloads-container');
             container.innerHTML = '';
@@ -80,7 +87,9 @@
                     let downloadAction = order.status === 'confirmed' ? 
                         `<div class="flex items-center space-x-2">
                             <button onclick="openReader('${item.title}')" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 hover:opacity-90 transition">📖 อ่านออนไลน์</button>
-                            <a href="#" onclick="alert('กำลังดาวน์โหลดไฟล์: ${item.title} 📥')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-2xl text-xs font-bold transition">PDF</a>
+                            <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" onclick="alert('กำลังดาวน์โหลดไฟล์: ${item.title}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">
+    PDF
+</a>
                          </div>` :
                         `<span class="text-slate-400 text-xs bg-slate-100 px-3 py-2 rounded-2xl font-bold">🔒 ล็อกดาวน์โหลด</span>`;
 

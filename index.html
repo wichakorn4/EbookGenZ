@@ -111,6 +111,10 @@
                 <div class="flex-1 flex flex-col justify-between">
                     <div>
                         <span id="modal-category" class="text-[10px] bg-sky-100 text-sky-600 px-3 py-1 rounded-full uppercase font-black"></span>
+                        <!-- 🏷️ วางโค้ดป้ายสถานะตรงนี้ (ด้านบนสุดของการ์ดสินค้า) -->
+<d<div id="modal-status-container" class="my-2">
+    <!-- ป้ายสถานะจะแสดงตรงนี้อัตโนมัติ -->
+</div>
                         <h2 id="modal-title" class="text-xl font-black text-slate-900 mt-3 mb-1"></h2>
                         <p id="modal-author" class="text-xs text-slate-500 mb-3 font-medium"></p>
                         <p id="modal-desc" class="text-xs text-slate-600 leading-relaxed bg-sky-50/60 p-3 rounded-2xl border border-sky-100/60 mb-4 font-medium">
@@ -215,6 +219,22 @@
             document.getElementById('modal-price').innerText = `฿${book.price}`;
             document.getElementById('modal-desc').innerText = book.description || "หนังสือดิจิทัลคุณภาพสูง เหมาะสำหรับศึกษาเรียนรู้และพัฒนาทักษะ อ่านง่าย จบไว นำไปใช้ได้จริง";
             
+            // 🏷️ โค้ดเช็กและแสดงป้ายสถานะตามที่แอดมินเลือก
+    const statusContainer = document.getElementById('modal-status-container');
+    let statusHTML = '';
+    
+    if (book.status === 'out') {
+        statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-rose-100 text-rose-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>สินค้าหมด</span>`;
+    } else if (book.status === 'hidden') {
+        statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-amber-100 text-amber-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>ปิดการขาย</span>`;
+    } else {
+        statusHTML = `<span class="text-[10px] font-bold px-2.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>พร้อมขาย</span>`;
+    }
+    
+    if (statusContainer) {
+        statusContainer.innerHTML = statusHTML;
+    }
+
             const addBtn = document.getElementById('modal-add-btn');
             addBtn.onclick = function() {
                 addToCart(book.id);
