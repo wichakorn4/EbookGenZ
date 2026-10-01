@@ -373,5 +373,34 @@ SELECT setval('payments_payment_id_seq', (SELECT MAX(payment_id) FROM payments))
 SELECT setval('download_links_download_id_seq', (SELECT MAX(download_id) FROM download_links));
 
 -- ====================================================================
+-- ฟังก์ชันสนับสนุนการรันคำสั่ง SQL โดยตรงจากหน้าเว็บ Admin (SQL Query Editor)
+-- ====================================================================
+CREATE OR REPLACE FUNCTION exec_sql(query text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result jsonb;
+BEGIN
+    -- กรณีคำสั่ง SELECT หรือ WITH (คืนค่าเป็นตาราง JSON)
+    IF query ~* '^\s*(SELECT|WITH)\s+' THEN
+        EXECUTE 'SELECT COALESCE(jsonb_agg(t), ''[]''::jsonb) FROM (' || query || ') t' INTO result;
+        RETURN result;
+    ELSE
+        -- กรณีคำสั่ง INSERT, UPDATE, DELETE, CREATE, DROP, ALTER
+        EXECUTE query;
+        RETURN jsonb_build_object('success', true, 'message', 'Command executed successfully');
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$;
+
+-- ให้สิทธิ์ anon และ authenticated เรียกใช้งานฟังก์ชัน exec_sql ได้
+GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;
+
+-- ====================================================================
 -- สิ้นสุดสคริปต์สำหรับ Supabase
 -- ====================================================================
+

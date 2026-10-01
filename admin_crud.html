@@ -34,17 +34,21 @@
             </div>
 
             <!-- Action Buttons -->
+                <button onclick="switchViewMode('sql')" title="เปิด SQL Query Editor สำหรับพิมพ์และรันคำสั่ง SQL" class="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 font-bold shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>⚡ SQL Editor</span>
+                </button>
                 <button onclick="openSupabaseConfigModal()" title="ตั้งค่าหรือเชื่อมต่อกับ Supabase" class="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-                    <span>⚡ ตั้งค่า Supabase</span>
+                    <span>⚙️ ตั้งค่า Supabase</span>
                 </button>
                 <button onclick="syncAllFromSupabase()" title="ดึงข้อมูลล่าสุดจาก Supabase Cloud" class="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
                     <span>☁️ ซิงค์จาก Cloud</span>
                 </button>
                 <button onclick="confirmResetSeedData()" title="รีเซ็ตฐานข้อมูลเป็นค่าเริ่มต้น 30+ รายการ" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-                    <span>🔄 รีเซ็ต Seed Data (30+ ออเดอร์)</span>
+                    <span>🔄 รีเซ็ต Seed Data</span>
                 </button>
                 <button onclick="exportSQLFile()" title="ดาวน์โหลดไฟล์ SQL" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
-                    <span>📥 ส่งออก SQL (.sql)</span>
+                    <span>📥 ส่งออก SQL</span>
                 </button>
                 <button onclick="copySQLInsertStatements()" title="คัดลอกคำสั่ง INSERT ทั้งหมด" class="bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
                     <span>📋 คัดลอก SQL</span>
@@ -98,7 +102,7 @@
     <!-- Main Workspace Container -->
     <main class="container mx-auto px-4 lg:px-6 py-6 flex-1 flex flex-col">
         
-        <!-- Table Navigation Pills (8 Tables) -->
+        <!-- Table Navigation Pills (8 Tables + SQL Editor) -->
         <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-5 custom-scrollbar text-xs font-bold">
             <button onclick="switchTable('roles')" id="nav-tab-roles" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500">
                 <span>🛡️ 1. roles</span>
@@ -132,69 +136,231 @@
                 <span>🔗 8. download_links</span>
                 <span class="bg-slate-900 px-2 py-0.5 rounded-md text-[10px] text-slate-400 count-badge">38</span>
             </button>
+            <div class="h-6 w-px bg-slate-700 mx-1"></div>
+            <!-- Tab 9: SQL Query Editor -->
+            <button onclick="switchViewMode('sql')" id="nav-tab-sql" class="table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:border-emerald-400 font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>⚡ SQL Query Editor</span>
+                <span class="bg-emerald-950/80 px-2 py-0.5 rounded text-[10px] text-emerald-300 font-mono border border-emerald-800/60">Live</span>
+            </button>
         </div>
 
-        <!-- Table Information and Controls Header -->
-        <div class="bg-slate-800/90 backdrop-blur border border-slate-700/80 rounded-3xl p-5 mb-5 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <div class="flex items-center gap-3">
-                    <h1 id="active-table-title" class="text-xl lg:text-2xl font-black text-white">ตาราง: <span class="text-sky-400 font-mono">ebooks</span></h1>
-                    <span id="active-table-desc-badge" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-medium">รายการหนังสือดิจิทัล</span>
+        <!-- ========================================================= -->
+        <!-- VIEW 1: Grid Table View (8 ตารางข้อมูลหลัก) -->
+        <!-- ========================================================= -->
+        <div id="section-table-view" class="space-y-5">
+            <!-- Table Information and Controls Header -->
+            <div class="bg-slate-800/90 backdrop-blur border border-slate-700/80 rounded-3xl p-5 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h1 id="active-table-title" class="text-xl lg:text-2xl font-black text-white">ตาราง: <span class="text-sky-400 font-mono">ebooks</span></h1>
+                        <span id="active-table-desc-badge" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-medium">รายการหนังสือดิจิทัล</span>
+                    </div>
+                    <p id="active-table-info" class="text-xs text-slate-400 mt-1">คีย์หลัก: <span class="font-mono text-amber-300">ebook_id</span> | เชื่อมโยง Foreign Key: <span class="font-mono text-sky-300">category_id -> categories(category_id)</span></p>
                 </div>
-                <p id="active-table-info" class="text-xs text-slate-400 mt-1">คีย์หลัก: <span class="font-mono text-amber-300">ebook_id</span> | เชื่อมโยง Foreign Key: <span class="font-mono text-sky-300">category_id -> categories(category_id)</span></p>
+
+                <!-- Search, Filter & Add Record Button -->
+                <div class="flex items-center flex-wrap gap-3">
+                    <div class="relative">
+                        <input type="text" id="table-search-input" oninput="handleTableSearch()" placeholder="🔍 ค้นหาในตาราง..." class="bg-slate-900/90 border border-slate-700 text-slate-200 text-xs rounded-2xl px-4 py-2.5 pl-9 focus:outline-none focus:border-sky-500 w-52 md:w-64 transition">
+                        <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+                    </div>
+
+                    <div id="filter-container"></div>
+
+                    <button onclick="openAddModal()" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-sky-500/25 transition flex items-center gap-2 transform active:scale-95">
+                        <span>+ เพิ่มข้อมูลใหม่</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Search, Filter & Add Record Button -->
-            <div class="flex items-center flex-wrap gap-3">
-                <div class="relative">
-                    <input type="text" id="table-search-input" oninput="handleTableSearch()" placeholder="🔍 ค้นหาในตาราง..." class="bg-slate-900/90 border border-slate-700 text-slate-200 text-xs rounded-2xl px-4 py-2.5 pl-9 focus:outline-none focus:border-sky-500 w-52 md:w-64 transition">
-                    <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+            <!-- Data Grid Table Container -->
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl flex flex-col mb-6">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead id="grid-table-head" class="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-700 sticky top-0 z-10 backdrop-blur">
+                            <!-- Table header will be dynamically rendered -->
+                        </thead>
+                        <tbody id="grid-table-body" class="divide-y divide-slate-700/60 text-slate-300">
+                            <!-- Table rows will be dynamically rendered -->
+                        </tbody>
+                    </table>
                 </div>
 
-                <div id="filter-container">
-                    <!-- Dynamic filter dropdown if needed -->
+                <!-- Table Footer Status -->
+                <div class="bg-slate-900/90 px-6 py-3 border-t border-slate-700 flex flex-wrap justify-between items-center text-xs text-slate-400">
+                    <div id="grid-row-summary">แสดงทั้งหมด 10 รายการ</div>
+                    <div class="flex items-center space-x-2 text-[11px]">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>ซิงค์ข้อมูลกับระบบหน้าร้านและแดชบอร์ดอัตโนมัติ (Realtime Sync)</span>
+                    </div>
                 </div>
+            </div>
 
-                <button onclick="openAddModal()" class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-sky-500/25 transition flex items-center gap-2 transform active:scale-95">
-                    <span>+ เพิ่มข้อมูลใหม่</span>
-                </button>
+            <!-- SQL Query Simulator Inspector (Great for Teacher Presentations!) -->
+            <div class="bg-slate-950 border border-slate-800 rounded-3xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-black text-sky-400 font-mono">⚡ SQL QUERY INSPECTOR</span>
+                        <span class="text-[10px] bg-sky-950 text-sky-300 border border-sky-800/60 px-2 py-0.5 rounded-md">คำสั่ง SQL ของตารางนี้</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openCurrentSQLInEditor()" class="text-[11px] text-sky-400 hover:text-sky-300 transition font-mono flex items-center gap-1 font-bold">
+                            <span>⚡ เปิดใน SQL Editor ↗</span>
+                        </button>
+                        <button onclick="copyCurrentSQLQuery()" class="text-[11px] text-slate-400 hover:text-white transition font-mono">📋 คัดลอกคำสั่ง SQL</button>
+                    </div>
+                </div>
+                <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto custom-scrollbar select-all" id="sql-inspector-text">
+                    SELECT * FROM ebooks ORDER BY ebook_id ASC;
+                </div>
             </div>
         </div>
 
-        <!-- Data Grid Table Container -->
-        <div class="bg-slate-800/80 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl flex-1 flex flex-col mb-6">
-            <div class="overflow-x-auto flex-1 custom-scrollbar">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead id="grid-table-head" class="bg-slate-900/90 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-700 sticky top-0 z-10 backdrop-blur">
-                        <!-- Table header will be dynamically rendered -->
-                    </thead>
-                    <tbody id="grid-table-body" class="divide-y divide-slate-700/60 text-slate-300">
-                        <!-- Table rows will be dynamically rendered -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- ========================================================= -->
+        <!-- VIEW 2: Interactive SQL Query Editor & Console -->
+        <!-- ========================================================= -->
+        <div id="section-sql-editor" class="space-y-5 hidden">
+            <!-- SQL Editor Top Card -->
+            <div class="bg-slate-800/90 backdrop-blur border border-slate-700/80 rounded-3xl p-5 shadow-2xl">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-700/70">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
+                            ⚡
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h2 class="text-xl font-black text-white">SQL Query Editor & Live Console</h2>
+                                <span id="sql-db-badge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span>Supabase Cloud Database</span>
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5">พิมพ์และรันคำสั่ง SQL (SELECT, INSERT, UPDATE, DELETE) บนฐานข้อมูล Supabase Cloud ได้โดยตรง</p>
+                        </div>
+                    </div>
 
-            <!-- Table Footer Status -->
-            <div class="bg-slate-900/90 px-6 py-3 border-t border-slate-700 flex flex-wrap justify-between items-center text-xs text-slate-400">
-                <div id="grid-row-summary">แสดงทั้งหมด 10 รายการ</div>
-                <div class="flex items-center space-x-2 text-[11px]">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span>ซิงค์ข้อมูลกับระบบหน้าร้านและแดชบอร์ดอัตโนมัติ (Realtime Sync)</span>
+                    <!-- Quick Template Selector & Help -->
+                    <div class="flex items-center flex-wrap gap-2 text-xs">
+                        <div class="flex items-center space-x-1.5 bg-slate-900 border border-slate-700 px-3 py-2 rounded-2xl">
+                            <span class="text-slate-400 font-bold text-[11px]">ตัวอย่างคำสั่ง:</span>
+                            <select id="sql-preset-select" onchange="loadSQLPreset(this.value)" class="bg-transparent text-slate-200 text-xs font-mono focus:outline-none cursor-pointer">
+                                <option value="">-- เลือกเทมเพลต SQL --</option>
+                                <option value="select_ebooks">1. SELECT * FROM ebooks (หนังสือทั้งหมด)</option>
+                                <option value="select_active_ebooks">2. SELECT * FROM ebooks WHERE is_active = 1 (พร้อมขาย)</option>
+                                <option value="select_orders_high">3. SELECT * FROM orders WHERE total_amount > 500 (ยอดสั่งซื้อสูง)</option>
+                                <option value="select_pending_payments">4. SELECT * FROM payments WHERE payment_status = 'waiting_verify' (รอตรวจสลิป)</option>
+                                <option value="select_customers">5. SELECT * FROM users WHERE role_id = 2 (รายชื่อลูกค้า)</option>
+                                <option value="insert_category">6. INSERT INTO categories (เพิ่มหมวดหมู่ใหม่)</option>
+                                <option value="update_price">7. UPDATE ebooks SET price (ปรับราคาหนังสือ)</option>
+                                <option value="delete_sample">8. DELETE FROM categories (ลบหมวดหมู่ตัวอย่าง)</option>
+                                <option value="join_ebooks_cat">9. SELECT ebooks + categories (JOIN)</option>
+                            </select>
+                        </div>
+                        <button onclick="openExecSqlHelpModal()" class="px-3.5 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 rounded-2xl font-bold transition flex items-center gap-1.5">
+                            <span>💡 วิธีติดตั้ง exec_sql บน Supabase</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Textarea Editor with Line Numbers & Syntax Style -->
+                <div class="relative bg-slate-950 rounded-2xl border border-slate-700 overflow-hidden shadow-inner font-mono text-xs">
+                    <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                            <span class="text-slate-400 font-bold ml-2 font-mono">SQL Console (Fira Code)</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-slate-500">คีย์ลัด: <b class="text-sky-400">Ctrl + Enter</b> เพื่อรันคำสั่ง</span>
+                            <button onclick="clearSQLEditor()" class="hover:text-rose-400 transition font-mono">🧹 ล้าง</button>
+                        </div>
+                    </div>
+
+                    <textarea id="sql-query-input" rows="6" placeholder="-- พิมพ์คำสั่ง SQL ที่นี่ (เช่น SELECT * FROM ebooks LIMIT 10;)&#10;SELECT * FROM ebooks ORDER BY ebook_id ASC LIMIT 10;" class="w-full bg-slate-950 text-emerald-300 p-4 font-mono text-sm leading-relaxed focus:outline-none resize-y selection:bg-sky-500/30 custom-scrollbar" spellcheck="false"></textarea>
+                </div>
+
+                <!-- Control Bar under Editor -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mt-4">
+                    <div class="flex items-center space-x-2">
+                        <button id="btn-run-sql" onclick="executeUserSQL()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 py-2.5 rounded-2xl font-black text-xs shadow-lg shadow-emerald-500/25 transition flex items-center gap-2 transform active:scale-95">
+                            <span id="run-sql-icon">▶️</span>
+                            <span>รันคำสั่ง SQL (Run SQL)</span>
+                        </button>
+                        <button onclick="formatSQLInput()" class="bg-slate-700/60 hover:bg-slate-700 text-slate-300 px-3.5 py-2.5 rounded-2xl text-xs font-bold border border-slate-600 transition">
+                            ✨ จัดรูปแบบ (Format)
+                        </button>
+                    </div>
+
+                    <!-- Quick Table Badges to click and append -->
+                    <div class="flex items-center space-x-1.5 text-xs text-slate-400 overflow-x-auto custom-scrollbar py-1">
+                        <span class="text-[11px] font-bold text-slate-500">แทรกชื่อตาราง:</span>
+                        <button onclick="insertTableToSQL('roles')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">roles</button>
+                        <button onclick="insertTableToSQL('users')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">users</button>
+                        <button onclick="insertTableToSQL('categories')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">categories</button>
+                        <button onclick="insertTableToSQL('ebooks')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">ebooks</button>
+                        <button onclick="insertTableToSQL('orders')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">orders</button>
+                        <button onclick="insertTableToSQL('order_items')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">order_items</button>
+                        <button onclick="insertTableToSQL('payments')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">payments</button>
+                        <button onclick="insertTableToSQL('download_links')" class="bg-slate-900 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded-lg border border-slate-700 font-mono text-[11px]">download_links</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- SQL Query Simulator Inspector (Great for Teacher Presentations!) -->
-        <div class="bg-slate-950 border border-slate-800 rounded-3xl p-4 shadow-xl">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xs font-black text-sky-400 font-mono">⚡ SQL QUERY INSPECTOR</span>
-                    <span class="text-[10px] bg-sky-950 text-sky-300 border border-sky-800/60 px-2 py-0.5 rounded-md">คำสั่ง SQL ที่ประมวลผลจริง</span>
+            <!-- SQL Results Card -->
+            <div id="sql-result-card" class="bg-slate-800/90 backdrop-blur border border-slate-700/80 rounded-3xl p-5 shadow-2xl flex flex-col min-h-[350px]">
+                <!-- Result Bar Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-3 mb-3 border-b border-slate-700/70">
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-sm font-black text-white flex items-center gap-2">
+                            <span>📊 ผลลัพธ์จากการรัน (Query Results)</span>
+                            <span id="sql-result-count-badge" class="text-xs bg-slate-900 text-slate-400 px-2.5 py-0.5 rounded-full font-mono">0 แถว</span>
+                        </h3>
+                        <span id="sql-exec-time-badge" class="text-[11px] text-emerald-400 font-mono hidden">⚡ 0 ms</span>
+                        <span id="sql-engine-badge" class="text-[10px] bg-sky-950 text-sky-300 border border-sky-800 px-2 py-0.5 rounded-md font-mono hidden">Supabase PostgREST</span>
+                    </div>
+
+                    <!-- View switch: Table vs JSON, and Export -->
+                    <div class="flex items-center space-x-2 text-xs">
+                        <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700">
+                            <button id="btn-view-table" onclick="switchSQLResultView('table')" class="px-3 py-1 rounded-lg font-bold bg-sky-500 text-white shadow transition">ตาราง (Table)</button>
+                            <button id="btn-view-json" onclick="switchSQLResultView('json')" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition">JSON</button>
+                        </div>
+                        <button onclick="copySQLResult()" class="px-3 py-1.5 bg-slate-700/60 hover:bg-slate-700 text-slate-300 rounded-xl font-bold border border-slate-600 transition flex items-center gap-1">
+                            <span>📋 คัดลอกผลลัพธ์</span>
+                        </button>
+                        <button onclick="downloadSQLResultJSON()" class="px-3 py-1.5 bg-slate-700/60 hover:bg-slate-700 text-slate-300 rounded-xl font-bold border border-slate-600 transition flex items-center gap-1">
+                            <span>📥 ดาวน์โหลด JSON</span>
+                        </button>
+                    </div>
                 </div>
-                <button onclick="copyCurrentSQLQuery()" class="text-[11px] text-slate-400 hover:text-white transition font-mono">📋 คัดลอกคำสั่ง SQL</button>
-            </div>
-            <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto custom-scrollbar select-all" id="sql-inspector-text">
-                SELECT * FROM ebooks ORDER BY ebook_id ASC;
+
+                <!-- Result Content (Table or JSON or Error) -->
+                <div id="sql-result-content" class="flex-1 flex flex-col justify-center items-center">
+                    <!-- Empty state -->
+                    <div id="sql-empty-state" class="text-center py-12 text-slate-500">
+                        <span class="text-4xl block mb-2">⚡</span>
+                        <p class="font-bold text-sm text-slate-400">ยังไม่มีการรันคำสั่ง SQL</p>
+                        <p class="text-xs text-slate-500 mt-1">พิมพ์คำสั่ง SQL ด้านบน แล้วกดปุ่ม "รันคำสั่ง SQL" หรือกด Ctrl + Enter เพื่อดูผลลัพธ์</p>
+                    </div>
+
+                    <!-- Table View Container -->
+                    <div id="sql-table-view-container" class="hidden w-full overflow-x-auto custom-scrollbar max-h-[500px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead id="sql-result-thead" class="bg-slate-900/90 text-slate-300 uppercase tracking-wider font-mono border-b border-slate-700 sticky top-0 z-10 backdrop-blur"></thead>
+                            <tbody id="sql-result-tbody" class="divide-y divide-slate-700/50 text-slate-300 font-mono"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- JSON View Container -->
+                    <div id="sql-json-view-container" class="hidden w-full h-full max-h-[500px] overflow-auto custom-scrollbar bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <pre id="sql-result-json" class="text-emerald-300 font-mono text-xs leading-relaxed select-all whitespace-pre"></pre>
+                    </div>
+
+                    <!-- Message / Error Box -->
+                    <div id="sql-message-box" class="hidden w-full p-4 rounded-2xl font-mono text-xs"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -229,6 +395,79 @@
             <img id="image-preview-img" src="" alt="Preview" class="w-full max-h-[70vh] object-contain rounded-2xl mb-3">
             <p id="image-preview-caption" class="text-xs text-slate-400 font-medium"></p>
             <button onclick="closeImagePreview()" class="mt-3 bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded-xl text-xs font-bold">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <!-- Modal: วิธีติดตั้ง exec_sql บน Supabase -->
+    <div id="exec-sql-help-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative text-slate-100 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">💡</span>
+                    <div>
+                        <h3 class="text-base font-black text-white">วิธีเปิดใช้งาน Full Raw SQL บน Supabase</h3>
+                        <p class="text-xs text-slate-400">ติดตั้ง Stored Procedure <code class="text-sky-300 font-mono">exec_sql(query text)</code></p>
+                    </div>
+                </div>
+                <button onclick="closeExecSqlHelpModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-black transition">✕</button>
+            </div>
+
+            <div class="py-4 overflow-y-auto flex-1 custom-scrollbar space-y-4 text-xs">
+                <div class="bg-sky-500/10 border border-sky-500/30 rounded-2xl p-4 text-sky-200">
+                    <p class="font-bold mb-1">ℹ️ การทำงานของระบบ SQL Query Editor ในหน้านี้:</p>
+                    <ul class="list-disc list-inside space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
+                        <li><b class="text-emerald-300">โหมดปกติ (ไม่ต้องติดตั้งอะไรเพิ่ม):</b> คุณสามารถรันคำสั่ง <code class="text-emerald-300 font-mono font-bold">SELECT</code>, <code class="text-emerald-300 font-mono font-bold">INSERT</code>, <code class="text-emerald-300 font-mono font-bold">UPDATE</code>, <code class="text-emerald-300 font-mono font-bold">DELETE</code> บนฐานข้อมูล Supabase ได้ทันที! ระบบมี Smart PostgREST Translator แปลงคำสั่ง SQL ให้โดยอัตโนมัติ</li>
+                        <li><b class="text-amber-300">โหมด Full Raw SQL:</b> หากต้องการใช้ฟังก์ชัน SQL ขั้นสูง เช่น <code class="text-amber-300 font-mono">JOIN</code> ข้ามตาราง, <code class="text-amber-300 font-mono">GROUP BY</code>, คำนวณยอด Aggregate หรือคำสั่ง DDL สร้างตาราง ให้ทำตาม 2 ขั้นตอนด้านล่างนี้ครับ</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-white mb-1.5 flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-full bg-sky-500 text-white inline-flex items-center justify-center text-[10px] font-black">1</span>
+                        <span>ไปที่ Supabase Dashboard -> เมนู SQL Editor</span>
+                    </h4>
+                    <p class="text-slate-400 text-[11px] pl-6">เปิดหน้าต่าง Supabase ของคุณ เลือกเมนู <b>SQL Editor</b> แถบด้านซ้าย แล้วกดปุ่ม <b>+ New query</b></p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-white mb-1.5 flex items-center gap-1.5">
+                        <span class="w-5 h-5 rounded-full bg-sky-500 text-white inline-flex items-center justify-center text-[10px] font-black">2</span>
+                        <span>คัดลอกโค้ด SQL ด้านล่างนี้ไปวาง แล้วกดปุ่ม <b>Run</b></span>
+                    </h4>
+                    <div class="relative bg-slate-950 rounded-2xl border border-slate-800 p-3 pt-9 font-mono text-[11px] text-emerald-300 overflow-x-auto custom-scrollbar">
+                        <button onclick="copyExecSqlSnippet()" class="absolute top-2.5 right-2.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold border border-slate-700 transition flex items-center gap-1">
+                            <span id="copy-snippet-icon">📋</span>
+                            <span>คัดลอกโค้ด</span>
+                        </button>
+                        <pre id="exec-sql-code-snippet" class="whitespace-pre select-all text-xs">CREATE OR REPLACE FUNCTION exec_sql(query text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result jsonb;
+BEGIN
+    EXECUTE 'WITH q AS (' || query || ') SELECT jsonb_agg(q) FROM q' INTO result;
+    RETURN coalesce(result, '[]'::jsonb);
+EXCEPTION WHEN OTHERS THEN
+    BEGIN
+        EXECUTE query;
+        RETURN jsonb_build_object('success', true, 'message', 'Command executed successfully');
+    EXCEPTION WHEN OTHERS THEN
+        RETURN jsonb_build_object('error', true, 'message', SQLERRM);
+    END;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-end space-x-3 text-xs font-bold">
+                <button type="button" onclick="closeExecSqlHelpModal()" class="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ปิดหน้าต่าง</button>
+                <button type="button" onclick="copyExecSqlSnippet(); closeExecSqlHelpModal();" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black shadow-lg shadow-sky-500/25 transition">📋 คัดลอกโค้ด & ไปใช้งาน</button>
+            </div>
         </div>
     </div>
 
@@ -633,9 +872,13 @@
         let currentTableName = 'ebooks';
         let currentSearchQuery = '';
         let editingRowId = null;
+        let currentViewMode = 'table'; // 'table' หรือ 'sql'
 
         // สลับตาราง
         function switchTable(tableName) {
+            if (currentViewMode !== 'table') {
+                switchViewMode('table');
+            }
             currentTableName = tableName;
             currentSearchQuery = '';
             document.getElementById('table-search-input').value = '';
@@ -1177,10 +1420,900 @@
             }
         }
 
+        // =====================================================================
+        // SQL Query Editor & Execution Engine
+        // =====================================================================
+        const SQL_PRESETS = {
+            select_ebooks: "SELECT * FROM ebooks ORDER BY ebook_id ASC;",
+            select_active_ebooks: "SELECT * FROM ebooks WHERE is_active = 1 ORDER BY price DESC;",
+            select_orders_high: "SELECT * FROM orders WHERE total_amount > 500 ORDER BY total_amount DESC;",
+            select_pending_payments: "SELECT * FROM payments WHERE payment_status = 'waiting_verify' ORDER BY payment_id DESC;",
+            select_customers: "SELECT user_id, username, full_name, email, phone FROM users WHERE role_id = 2 ORDER BY user_id ASC;",
+            insert_category: "INSERT INTO categories (category_name, category_slug, description, icon) VALUES ('Cybersecurity & DevOps', 'cybersecurity', 'หนังสือความปลอดภัยไซเบอร์และสถาปัตยกรรมคลาวด์', '🔒');",
+            update_price: "UPDATE ebooks SET price = 299.00 WHERE ebook_id = 1;",
+            delete_sample: "DELETE FROM categories WHERE category_slug = 'cybersecurity';",
+            join_ebooks_cat: "SELECT * FROM ebooks JOIN categories;"
+        };
+
+        let lastSQLResultData = null;
+        let currentSQLResultView = 'table';
+
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            const tableView = document.getElementById('section-table-view');
+            const sqlView = document.getElementById('section-sql-editor');
+            const sqlTab = document.getElementById('nav-tab-sql');
+
+            if (mode === 'sql') {
+                if (tableView) tableView.classList.add('hidden');
+                if (sqlView) sqlView.classList.remove('hidden');
+
+                // รีเซ็ตปุ่มแท็บของ 8 ตารางหลัก
+                Object.keys(TABLE_SCHEMAS).forEach(t => {
+                    const btn = document.getElementById(`nav-tab-${t}`);
+                    if (btn) {
+                        btn.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500 font-bold";
+                    }
+                });
+
+                // ไฮไลต์ปุ่มแท็บ SQL Editor
+                if (sqlTab) {
+                    sqlTab.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg shadow-emerald-500/20 font-black";
+                }
+
+                // โฟกัสไปที่ช่อง textarea SQL
+                const sqlInput = document.getElementById('sql-query-input');
+                if (sqlInput) {
+                    if (!sqlInput.value.trim()) {
+                        const pk = TABLE_SCHEMAS[currentTableName]?.pk || 'id';
+                        sqlInput.value = `SELECT * FROM ${currentTableName} ORDER BY ${pk} ASC LIMIT 10;`;
+                    }
+                    setTimeout(() => sqlInput.focus(), 60);
+                }
+            } else {
+                if (tableView) tableView.classList.remove('hidden');
+                if (sqlView) sqlView.classList.add('hidden');
+
+                // ปรับสไตล์แท็บ SQL Editor กลับเป็นปกติ
+                if (sqlTab) {
+                    sqlTab.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:border-emerald-400 font-bold";
+                }
+
+                // ไฮไลต์แท็บตารางที่เลือกอยู่
+                Object.keys(TABLE_SCHEMAS).forEach(t => {
+                    const btn = document.getElementById(`nav-tab-${t}`);
+                    if (!btn) return;
+                    if (t === currentTableName) {
+                        btn.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 shadow-md shadow-sky-500/20 font-black";
+                    } else {
+                        btn.className = "table-tab px-4 py-2.5 rounded-xl border transition flex items-center space-x-2 whitespace-nowrap bg-slate-800 text-slate-300 border-slate-700 hover:border-sky-500 font-bold";
+                    }
+                });
+            }
+        }
+
+        // เปิดคำสั่ง SQL ใน Inspector ไปยังหน้า SQL Editor
+        function openCurrentSQLInEditor() {
+            const el = document.getElementById('sql-inspector-text');
+            const query = el ? el.innerText.trim() : `SELECT * FROM ${currentTableName};`;
+            const input = document.getElementById('sql-query-input');
+            if (input) input.value = query;
+            switchViewMode('sql');
+            executeUserSQL();
+        }
+
+        // โหลด SQL Preset
+        function loadSQLPreset(presetKey) {
+            if (!presetKey || !SQL_PRESETS[presetKey]) return;
+            const input = document.getElementById('sql-query-input');
+            if (input) {
+                input.value = SQL_PRESETS[presetKey];
+                input.focus();
+            }
+        }
+
+        function clearSQLEditor() {
+            const input = document.getElementById('sql-query-input');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function insertTableToSQL(tableName) {
+            const input = document.getElementById('sql-query-input');
+            if (!input) return;
+            const start = input.selectionStart || input.value.length;
+            const end = input.selectionEnd || input.value.length;
+            const text = input.value;
+            input.value = text.substring(0, start) + tableName + text.substring(end);
+            input.focus();
+            input.selectionStart = input.selectionEnd = start + tableName.length;
+        }
+
+        function formatSQLInput() {
+            const input = document.getElementById('sql-query-input');
+            if (!input) return;
+            let q = input.value.trim();
+            if (!q) return;
+            const keywords = ['SELECT', 'FROM', 'WHERE', 'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'ON', 'AND', 'OR', 'ASC', 'DESC', 'AS', 'IN', 'LIKE', 'NOT'];
+            keywords.forEach(kw => {
+                const rx = new RegExp('\\b' + kw.replace(' ', '\\s+') + '\\b', 'gi');
+                q = q.replace(rx, kw);
+            });
+            input.value = q;
+        }
+
+        function cleanSQL(rawSql) {
+            let sql = rawSql.replace(/--.*$/gm, '').trim();
+            while (sql.endsWith(';')) {
+                sql = sql.slice(0, -1).trim();
+            }
+            return sql;
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function splitSqlValues(str, delimiter = ',') {
+            const results = [];
+            let current = '';
+            let inSingleQuote = false;
+            let inDoubleQuote = false;
+            for (let i = 0; i < str.length; i++) {
+                const char = str[i];
+                if (char === "'" && (i === 0 || str[i - 1] !== '\\')) {
+                    inSingleQuote = !inSingleQuote;
+                    current += char;
+                } else if (char === '"' && (i === 0 || str[i - 1] !== '\\')) {
+                    inDoubleQuote = !inDoubleQuote;
+                    current += char;
+                } else if (char === delimiter && !inSingleQuote && !inDoubleQuote) {
+                    results.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            if (current.trim().length > 0) {
+                results.push(current.trim());
+            }
+            return results;
+        }
+
+        function parseSqlValue(valStr) {
+            if (valStr === null || valStr === undefined) return null;
+            valStr = valStr.trim();
+            if (valStr.toUpperCase() === 'NULL') return null;
+            if (valStr.toUpperCase() === 'TRUE') return true;
+            if (valStr.toUpperCase() === 'FALSE') return false;
+            if ((valStr.startsWith("'") && valStr.endsWith("'")) || (valStr.startsWith('"') && valStr.endsWith('"'))) {
+                return valStr.substring(1, valStr.length - 1).replace(/''/g, "'").replace(/\\'/g, "'");
+            }
+            if (!isNaN(valStr) && valStr !== '') {
+                return Number(valStr);
+            }
+            return valStr;
+        }
+
+        function parseSelectSQL(sql) {
+            const match = sql.match(/^SELECT\s+([\s\S]+?)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+([\s\S]*))?$/i);
+            if (!match) return null;
+            const colsStr = match[1].trim();
+            const table = match[2].trim();
+            let rest = (match[3] || '').trim();
+
+            let whereStr = null;
+            let orderStr = null;
+            let limitNum = null;
+            let offsetNum = null;
+            let joinStr = null;
+
+            const joinMatch = rest.match(/^((?:(?:INNER|LEFT|RIGHT|FULL|CROSS)\s+)?JOIN\s+[\s\S]+?)(?=\s+WHERE|\s+ORDER\s+BY|\s+LIMIT|\s+OFFSET|$)/i);
+            if (joinMatch) {
+                joinStr = joinMatch[1].trim();
+                rest = rest.substring(joinMatch[0].length).trim();
+            }
+
+            const whereMatch = rest.match(/(?:^|\s+)WHERE\s+([\s\S]+?)(?=\s+ORDER\s+BY|\s+LIMIT|\s+OFFSET|$)/i);
+            if (whereMatch) {
+                whereStr = whereMatch[1].trim();
+            }
+
+            const orderMatch = rest.match(/(?:^|\s+)ORDER\s+BY\s+([\s\S]+?)(?=\s+LIMIT|\s+OFFSET|$)/i);
+            if (orderMatch) {
+                orderStr = orderMatch[1].trim();
+            }
+
+            const limitMatch = rest.match(/(?:^|\s+)LIMIT\s+(\d+)/i);
+            if (limitMatch) {
+                limitNum = parseInt(limitMatch[1], 10);
+            }
+
+            const offsetMatch = rest.match(/(?:^|\s+)OFFSET\s+(\d+)/i);
+            if (offsetMatch) {
+                offsetNum = parseInt(offsetMatch[1], 10);
+            }
+
+            return {
+                type: 'SELECT',
+                columns: colsStr,
+                table: table,
+                join: joinStr,
+                where: whereStr,
+                order: orderStr,
+                limit: limitNum,
+                offset: offsetNum
+            };
+        }
+
+        function parseInsertSQL(sql) {
+            const match = sql.match(/^INSERT\s+INTO\s+([a-zA-Z0-9_]+)(?:\s*\(([^)]+)\))?\s+VALUES\s*([\s\S]+)$/i);
+            if (!match) return null;
+            const table = match[1].trim();
+            const colsStr = match[2] ? match[2].trim() : null;
+            const valuesPart = match[3].trim();
+
+            let columns = [];
+            if (colsStr) {
+                columns = colsStr.split(',').map(c => c.trim().replace(/^[`"']|[`"']$/g, ''));
+            } else if (TABLE_SCHEMAS[table]) {
+                columns = TABLE_SCHEMAS[table].columns.filter(c => !c.autoIncrement).map(c => c.name);
+            }
+
+            const rows = [];
+            const tupleRegex = /\(([^)]+)\)/g;
+            let tupleMatch;
+            while ((tupleMatch = tupleRegex.exec(valuesPart)) !== null) {
+                const rawVals = splitSqlValues(tupleMatch[1]);
+                const rowObj = {};
+                for (let i = 0; i < columns.length; i++) {
+                    const colName = columns[i];
+                    const rawVal = rawVals[i] !== undefined ? rawVals[i] : null;
+                    rowObj[colName] = parseSqlValue(rawVal);
+                }
+                rows.push(rowObj);
+            }
+
+            return {
+                type: 'INSERT',
+                table: table,
+                columns: columns,
+                rows: rows
+            };
+        }
+
+        function parseUpdateSQL(sql) {
+            const match = sql.match(/^UPDATE\s+([a-zA-Z0-9_]+)\s+SET\s+([\s\S]+?)(?:\s+WHERE\s+([\s\S]+))?$/i);
+            if (!match) return null;
+            const table = match[1].trim();
+            const setClause = match[2].trim();
+            const whereStr = match[3] ? match[3].trim() : null;
+
+            const setPairs = splitSqlValues(setClause, ',');
+            const updates = {};
+            for (const pair of setPairs) {
+                const eqIdx = pair.indexOf('=');
+                if (eqIdx !== -1) {
+                    const colName = pair.substring(0, eqIdx).trim().replace(/^[`"']|[`"']$/g, '');
+                    const rawVal = pair.substring(eqIdx + 1).trim();
+                    updates[colName] = parseSqlValue(rawVal);
+                }
+            }
+
+            return {
+                type: 'UPDATE',
+                table: table,
+                updates: updates,
+                where: whereStr
+            };
+        }
+
+        function parseDeleteSQL(sql) {
+            const match = sql.match(/^DELETE\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+([\s\S]+))?$/i);
+            if (!match) return null;
+            return {
+                type: 'DELETE',
+                table: match[1].trim(),
+                where: match[2] ? match[2].trim() : null
+            };
+        }
+
+        function parseClientSQL(sql) {
+            const firstWord = sql.trim().split(/\s+/)[0].toUpperCase();
+            if (firstWord === 'SELECT') return parseSelectSQL(sql);
+            if (firstWord === 'INSERT') return parseInsertSQL(sql);
+            if (firstWord === 'UPDATE') return parseUpdateSQL(sql);
+            if (firstWord === 'DELETE') return parseDeleteSQL(sql);
+            return null;
+        }
+
+        function applyWhereToPostgREST(query, whereStr) {
+            if (!whereStr) return query;
+            const conditions = splitSqlValues(whereStr, 'AND');
+            for (let cond of conditions) {
+                cond = cond.trim();
+                if (!cond) continue;
+                const match = cond.match(/^([a-zA-Z0-9_]+)\s*(=|!=|<>|>=|<=|>|<|ILIKE|LIKE|IN)\s*([\s\S]+)$/i);
+                if (!match) continue;
+                const col = match[1].trim();
+                const op = match[2].toUpperCase().trim();
+                const rawVal = match[3].trim();
+                const val = parseSqlValue(rawVal);
+
+                if (op === '=') {
+                    query = query.eq(col, val);
+                } else if (op === '!=' || op === '<>') {
+                    query = query.neq(col, val);
+                } else if (op === '>') {
+                    query = query.gt(col, val);
+                } else if (op === '>=') {
+                    query = query.gte(col, val);
+                } else if (op === '<') {
+                    query = query.lt(col, val);
+                } else if (op === '<=') {
+                    query = query.lte(col, val);
+                } else if (op === 'LIKE') {
+                    query = query.like(col, val);
+                } else if (op === 'ILIKE') {
+                    query = query.ilike(col, val);
+                } else if (op === 'IN') {
+                    const cleanInStr = rawVal.replace(/^\(|\)$/g, '');
+                    const inArray = splitSqlValues(cleanInStr).map(v => parseSqlValue(v));
+                    query = query.in(col, inArray);
+                }
+            }
+            return query;
+        }
+
+        // ซิงค์ตารางเดี่ยวจาก Supabase หลังคำสั่ง DML
+        async function syncSingleTableFromSupabase(tableName) {
+            if (typeof isSupabaseReady !== 'function' || !isSupabaseReady() || !supabaseClient) return;
+            try {
+                const schema = TABLE_SCHEMAS[tableName];
+                const pk = schema ? schema.pk : 'id';
+                const { data, error } = await supabaseClient
+                    .from(tableName)
+                    .select('*')
+                    .order(pk, { ascending: true });
+
+                if (!error && data) {
+                    db[tableName] = data;
+                    saveDatabase();
+                    if (currentTableName === tableName) {
+                        renderTableData();
+                    }
+                    updateStatCounters();
+                }
+            } catch (e) {
+                console.warn('syncSingleTableFromSupabase warning:', e);
+            }
+        }
+
+        async function syncTablesAfterDML(sql) {
+            const tables = Object.keys(TABLE_SCHEMAS);
+            for (const tbl of tables) {
+                const regex = new RegExp('\\b' + tbl + '\\b', 'i');
+                if (regex.test(sql)) {
+                    await syncSingleTableFromSupabase(tbl);
+                }
+            }
+        }
+
+        // รันคำสั่ง PostgREST Translator บน Supabase
+        async function executePostgRESTSQL(parsed, rawSql) {
+            if (parsed.type === 'SELECT') {
+                let cols = parsed.columns.trim();
+                if (cols.includes('*') && parsed.join) {
+                    const joinTableMatch = parsed.join.match(/JOIN\s+([a-zA-Z0-9_]+)/i);
+                    if (joinTableMatch) {
+                        cols = `*, ${joinTableMatch[1]}(*)`;
+                    }
+                }
+
+                let q = supabaseClient.from(parsed.table).select(cols);
+                q = applyWhereToPostgREST(q, parsed.where);
+
+                if (parsed.order) {
+                    const parts = parsed.order.split(/\s+/);
+                    const orderCol = parts[0].trim();
+                    const ascending = !parts[1] || parts[1].toUpperCase() !== 'DESC';
+                    q = q.order(orderCol, { ascending });
+                }
+
+                if (parsed.limit) {
+                    const from = parsed.offset || 0;
+                    const to = from + parsed.limit - 1;
+                    q = q.range(from, to);
+                } else if (parsed.offset) {
+                    q = q.range(parsed.offset, parsed.offset + 999);
+                }
+
+                const { data, error } = await q;
+                if (error) throw error;
+                return data || [];
+            } else if (parsed.type === 'INSERT') {
+                const { data, error } = await supabaseClient.from(parsed.table).insert(parsed.rows).select();
+                if (error) throw error;
+                await syncSingleTableFromSupabase(parsed.table);
+                return data || { success: true, message: `เพิ่มข้อมูลลงตาราง ${parsed.table} สำเร็จ (${parsed.rows.length} แถว)` };
+            } else if (parsed.type === 'UPDATE') {
+                let q = supabaseClient.from(parsed.table).update(parsed.updates);
+                q = applyWhereToPostgREST(q, parsed.where);
+                const { data, error } = await q.select();
+                if (error) throw error;
+                await syncSingleTableFromSupabase(parsed.table);
+                return data || { success: true, message: `อัปเดตข้อมูลในตาราง ${parsed.table} สำเร็จ` };
+            } else if (parsed.type === 'DELETE') {
+                if (!parsed.where && !confirm(`⚠️ คำสั่ง DELETE ไม่มี WHERE clause จะลบข้อมูลทั้งหมดในตาราง ${parsed.table} คุณแน่ใจหรือไม่?`)) {
+                    throw new Error('การดำเนินการถูกยกเลิกโดยผู้ใช้');
+                }
+                let q = supabaseClient.from(parsed.table).delete();
+                q = applyWhereToPostgREST(q, parsed.where);
+                const { data, error } = await q.select();
+                if (error) throw error;
+                await syncSingleTableFromSupabase(parsed.table);
+                return data || { success: true, message: `ลบข้อมูลจากตาราง ${parsed.table} สำเร็จ` };
+            }
+            throw new Error('ไม่รองรับคำสั่ง SQL ประเภทนี้');
+        }
+
+        // รันคำสั่ง Local Browser Database (Offline Fallback)
+        function executeLocalSQL(parsed, rawSql) {
+            if (!parsed) throw new Error('ไวยากรณ์ SQL ไม่ถูกต้องหรือไม่รองรับในโหมดออฟไลน์');
+            const table = parsed.table;
+            if (!db[table]) {
+                throw new Error(`ไม่พบตาราง "${table}" ในฐานข้อมูล (ตารางที่รองรับ: ${Object.keys(TABLE_SCHEMAS).join(', ')})`);
+            }
+
+            if (parsed.type === 'SELECT') {
+                let rows = [...db[table]];
+                if (parsed.where) {
+                    const conditions = splitSqlValues(parsed.where, 'AND');
+                    rows = rows.filter(r => {
+                        for (let cond of conditions) {
+                            const match = cond.match(/^([a-zA-Z0-9_]+)\s*(=|!=|<>|>=|<=|>|<|ILIKE|LIKE)\s*([\s\S]+)$/i);
+                            if (!match) continue;
+                            const col = match[1].trim();
+                            const op = match[2].toUpperCase().trim();
+                            const targetVal = parseSqlValue(match[3].trim());
+                            const cellVal = r[col];
+
+                            if (op === '=' && String(cellVal) !== String(targetVal)) return false;
+                            if ((op === '!=' || op === '<>') && String(cellVal) === String(targetVal)) return false;
+                            if (op === '>' && Number(cellVal) <= Number(targetVal)) return false;
+                            if (op === '>=' && Number(cellVal) < Number(targetVal)) return false;
+                            if (op === '<' && Number(cellVal) >= Number(targetVal)) return false;
+                            if (op === '<=' && Number(cellVal) > Number(targetVal)) return false;
+                            if (op === 'LIKE' || op === 'ILIKE') {
+                                const pattern = String(targetVal).replace(/%/g, '.*');
+                                const rx = new RegExp(pattern, op === 'ILIKE' ? 'i' : '');
+                                if (!rx.test(String(cellVal))) return false;
+                            }
+                        }
+                        return true;
+                    });
+                }
+
+                if (parsed.join) {
+                    const joinMatch = parsed.join.match(/JOIN\s+([a-zA-Z0-9_]+)/i);
+                    if (joinMatch) {
+                        const joinTable = joinMatch[1].trim();
+                        const rightData = db[joinTable] || [];
+                        const refFk = TABLE_SCHEMAS[table]?.columns.find(c => c.refTable === joinTable);
+                        rows = rows.map(r => {
+                            let matchedRight = null;
+                            if (refFk) {
+                                matchedRight = rightData.find(item => item[refFk.refKey] === r[refFk.name]);
+                            }
+                            return { ...r, [joinTable]: matchedRight || null };
+                        });
+                    }
+                }
+
+                if (parsed.order) {
+                    const parts = parsed.order.split(/\s+/);
+                    const orderCol = parts[0].trim();
+                    const asc = !parts[1] || parts[1].toUpperCase() !== 'DESC';
+                    rows.sort((a, b) => {
+                        if (a[orderCol] < b[orderCol]) return asc ? -1 : 1;
+                        if (a[orderCol] > b[orderCol]) return asc ? 1 : -1;
+                        return 0;
+                    });
+                }
+
+                const offset = parsed.offset || 0;
+                const limit = parsed.limit !== null ? parsed.limit : rows.length;
+                rows = rows.slice(offset, offset + limit);
+
+                if (parsed.columns && parsed.columns !== '*') {
+                    const colList = parsed.columns.split(',').map(c => c.trim().split(/\s+AS\s+/i)[0].trim());
+                    rows = rows.map(r => {
+                        const projected = {};
+                        colList.forEach(c => {
+                            if (r[c] !== undefined) projected[c] = r[c];
+                        });
+                        return Object.keys(projected).length > 0 ? projected : r;
+                    });
+                }
+                return rows;
+            } else if (parsed.type === 'INSERT') {
+                const schema = TABLE_SCHEMAS[table];
+                parsed.rows.forEach(row => {
+                    if (schema && schema.pk && !row[schema.pk]) {
+                        const maxId = db[table].reduce((max, r) => Math.max(max, Number(r[schema.pk]) || 0), 0);
+                        row[schema.pk] = maxId + 1;
+                    }
+                    db[table].push(row);
+                });
+                saveDatabase();
+                renderTableData();
+                updateStatCounters();
+                return parsed.rows;
+            } else if (parsed.type === 'UPDATE') {
+                let count = 0;
+                const updated = [];
+                db[table].forEach(r => {
+                    let match = true;
+                    if (parsed.where) {
+                        const conds = splitSqlValues(parsed.where, 'AND');
+                        for (let cond of conds) {
+                            const m = cond.match(/^([a-zA-Z0-9_]+)\s*(=|!=|<>|>=|<=|>|<)\s*([\s\S]+)$/i);
+                            if (m) {
+                                const col = m[1].trim();
+                                const val = parseSqlValue(m[3].trim());
+                                if (String(r[col]) !== String(val)) { match = false; break; }
+                            }
+                        }
+                    }
+                    if (match) {
+                        Object.assign(r, parsed.updates);
+                        count++;
+                        updated.push({ ...r });
+                    }
+                });
+                saveDatabase();
+                renderTableData();
+                updateStatCounters();
+                return updated.length > 0 ? updated : { success: true, message: `อัปเดต ${count} แถวในโหมด Local DB` };
+            } else if (parsed.type === 'DELETE') {
+                if (!parsed.where && !confirm(`⚠️ คำสั่ง DELETE ไม่มี WHERE clause จะลบข้อมูลทั้งหมดในตาราง ${table} คุณแน่ใจหรือไม่?`)) {
+                    throw new Error('การดำเนินการถูกยกเลิกโดยผู้ใช้');
+                }
+                const origLen = db[table].length;
+                if (!parsed.where) {
+                    db[table] = [];
+                } else {
+                    const conds = splitSqlValues(parsed.where, 'AND');
+                    db[table] = db[table].filter(r => {
+                        for (let cond of conds) {
+                            const m = cond.match(/^([a-zA-Z0-9_]+)\s*(=|!=|<>|>=|<=|>|<)\s*([\s\S]+)$/i);
+                            if (m) {
+                                const col = m[1].trim();
+                                const val = parseSqlValue(m[3].trim());
+                                if (String(r[col]) === String(val)) return false;
+                            }
+                        }
+                        return true;
+                    });
+                }
+                const deletedCount = origLen - db[table].length;
+                saveDatabase();
+                renderTableData();
+                updateStatCounters();
+                return { success: true, message: `ลบ ${deletedCount} แถวจากตาราง ${table}` };
+            }
+            throw new Error('คำสั่งไม่รองรับ');
+        }
+
+        // =====================================================================
+        // SQL Execution Controller
+        // =====================================================================
+        async function executeUserSQL() {
+            const rawSql = document.getElementById('sql-query-input').value.trim();
+            if (!rawSql) {
+                alert('กรุณาพิมพ์คำสั่ง SQL ก่อนรัน (หรือเลือกเทมเพลตจากรายการด้านบน)');
+                document.getElementById('sql-query-input').focus();
+                return;
+            }
+
+            const clean = cleanSQL(rawSql);
+            const runBtn = document.getElementById('btn-run-sql');
+            const runIcon = document.getElementById('run-sql-icon');
+
+            runBtn.disabled = true;
+            runBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            runIcon.innerText = '⏳';
+
+            const startTime = performance.now();
+
+            try {
+                let result = null;
+                let engineUsed = '';
+
+                // 1. ถ้าเชื่อมต่อ Supabase ไว้ ลองรันผ่าน RPC exec_sql ก่อน
+                if (typeof isSupabaseReady === 'function' && isSupabaseReady() && supabaseClient) {
+                    try {
+                        const rpcRes = await supabaseClient.rpc('exec_sql', { query: clean });
+                        if (!rpcRes.error) {
+                            result = rpcRes.data;
+                            engineUsed = '⚡ Supabase exec_sql (Native PostgreSQL)';
+
+                            if (result && typeof result === 'object' && result.error) {
+                                const duration = performance.now() - startTime;
+                                displaySQLResult(null, false, result.message, duration, engineUsed);
+                                return;
+                            }
+
+                            const firstWord = clean.split(/\s+/)[0].toUpperCase();
+                            if (['INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'DROP'].includes(firstWord)) {
+                                await syncTablesAfterDML(clean);
+                            }
+
+                            const duration = performance.now() - startTime;
+                            displaySQLResult(result, true, null, duration, engineUsed);
+                            return;
+                        } else {
+                            console.log('RPC exec_sql not installed, falling back to PostgREST Translator:', rpcRes.error.message);
+                        }
+                    } catch (rpcErr) {
+                        console.log('RPC execution fallback:', rpcErr);
+                    }
+
+                    // 2. Fallback: Smart Client-Side PostgREST Parser
+                    const parsed = parseClientSQL(clean);
+                    if (parsed) {
+                        engineUsed = '⚡ Supabase PostgREST Client';
+                        result = await executePostgRESTSQL(parsed, clean);
+                        const duration = performance.now() - startTime;
+                        displaySQLResult(result, true, null, duration, engineUsed);
+                        return;
+                    } else {
+                        throw new Error('คำสั่ง SQL นี้ต้องการ Stored Procedure (exec_sql) บน Supabase\nเนื่องจากคำสั่งมีโครงสร้างขั้นสูง (เช่น JOIN หรือ CTE หรือ Aggregate)\n\nกรุณาคลิกปุ่ม "💡 วิธีติดตั้ง exec_sql บน Supabase" ด้านบนเพื่อเปิดใช้งาน');
+                    }
+                } else {
+                    // 3. โหมดออฟไลน์
+                    const parsed = parseClientSQL(clean);
+                    if (!parsed) {
+                        throw new Error('ไม่สามารถประมวลผลคำสั่ง SQL นี้ในโหมดออฟไลน์ได้ (รองรับ SELECT, INSERT, UPDATE, DELETE บน 8 ตารางหลัก)');
+                    }
+                    engineUsed = '💻 Local Browser DB (Offline)';
+                    result = executeLocalSQL(parsed, clean);
+                    const duration = performance.now() - startTime;
+                    displaySQLResult(result, true, null, duration, engineUsed);
+                }
+            } catch (err) {
+                console.error('SQL Execution Error:', err);
+                const duration = performance.now() - startTime;
+                displaySQLResult(null, false, err.message || String(err), duration, 'Execution Error');
+            } finally {
+                runBtn.disabled = false;
+                runBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                runIcon.innerText = '▶️';
+            }
+        }
+
+        // แสดงผลลัพธ์ SQL ในหน้าจอ
+        function displaySQLResult(data, isSuccess, errorMsg, durationMs, engineName) {
+            const timeBadge = document.getElementById('sql-exec-time-badge');
+            const engineBadge = document.getElementById('sql-engine-badge');
+            const countBadge = document.getElementById('sql-result-count-badge');
+            const emptyState = document.getElementById('sql-empty-state');
+            const msgBox = document.getElementById('sql-message-box');
+            const tableContainer = document.getElementById('sql-table-view-container');
+            const jsonContainer = document.getElementById('sql-json-view-container');
+            const jsonPre = document.getElementById('sql-result-json');
+
+            if (timeBadge) {
+                timeBadge.innerText = `⚡ ${durationMs.toFixed(1)} ms`;
+                timeBadge.classList.remove('hidden');
+            }
+            if (engineBadge) {
+                engineBadge.innerText = engineName || 'Database';
+                engineBadge.classList.remove('hidden');
+            }
+
+            if (!isSuccess) {
+                lastSQLResultData = null;
+                if (emptyState) emptyState.classList.add('hidden');
+                if (tableContainer) tableContainer.classList.add('hidden');
+                if (jsonContainer) jsonContainer.classList.add('hidden');
+
+                if (countBadge) {
+                    countBadge.innerText = 'เกิดข้อผิดพลาด';
+                    countBadge.className = 'text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full font-mono';
+                }
+
+                if (msgBox) {
+                    msgBox.className = 'w-full p-4 rounded-2xl font-mono text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+                    msgBox.innerHTML = `
+                        <div class="flex items-start space-x-3">
+                            <span class="text-xl">❌</span>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-rose-400 text-sm mb-1">เกิดข้อผิดพลาดในการรัน SQL (SQL Execution Error)</h4>
+                                <p class="text-xs text-rose-200/90 whitespace-pre-wrap leading-relaxed">${escapeHtml(errorMsg || 'Unknown error occurred')}</p>
+                                <div class="mt-3 pt-2 border-t border-rose-500/20 text-[11px] text-slate-400 flex items-center gap-2">
+                                    <span>💡 คำแนะนำ: ตรวจสอบความถูกต้องของคำสั่ง หรือคลิกปุ่ม <b>"วิธีติดตั้ง exec_sql บน Supabase"</b> ด้านบน</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    msgBox.classList.remove('hidden');
+                }
+                return;
+            }
+
+            // สำเร็จ
+            lastSQLResultData = data;
+            if (emptyState) emptyState.classList.add('hidden');
+            if (msgBox) msgBox.classList.add('hidden');
+
+            if (jsonPre) {
+                jsonPre.textContent = JSON.stringify(data, null, 2);
+            }
+
+            if (Array.isArray(data)) {
+                if (countBadge) {
+                    countBadge.innerText = `${data.length} แถว`;
+                    countBadge.className = 'text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold';
+                }
+
+                const thead = document.getElementById('sql-result-thead');
+                const tbody = document.getElementById('sql-result-tbody');
+
+                if (data.length === 0) {
+                    if (thead) thead.innerHTML = '';
+                    if (tbody) tbody.innerHTML = `<tr><td class="text-center py-12 text-slate-500 font-mono">Query executed successfully, 0 rows returned (ไม่มีข้อมูลที่ตรงกับเงื่อนไข)</td></tr>`;
+                } else {
+                    const cols = Object.keys(data[0]);
+                    let thHtml = '<tr>';
+                    cols.forEach(c => {
+                        thHtml += `<th class="py-3 px-4 whitespace-nowrap bg-slate-900/90 text-slate-300 border-b border-slate-700 font-mono text-[11px]">${escapeHtml(c)}</th>`;
+                    });
+                    thHtml += '</tr>';
+                    if (thead) thead.innerHTML = thHtml;
+
+                    let tbHtml = '';
+                    data.forEach(row => {
+                        tbHtml += `<tr class="hover:bg-slate-750 hover:bg-slate-700/30 transition border-b border-slate-800">`;
+                        cols.forEach(c => {
+                            const val = row[c];
+                            let displayVal = '';
+                            if (val === null || val === undefined) {
+                                displayVal = '<span class="text-slate-600 italic">NULL</span>';
+                            } else if (typeof val === 'boolean') {
+                                displayVal = val ? '<span class="text-emerald-400 font-bold">TRUE</span>' : '<span class="text-rose-400 font-bold">FALSE</span>';
+                            } else if (typeof val === 'number') {
+                                displayVal = `<span class="text-amber-300 font-bold">${val}</span>`;
+                            } else if (typeof val === 'object') {
+                                displayVal = `<span class="text-sky-300 text-[10px] truncate max-w-xs block font-mono" title="${escapeHtml(JSON.stringify(val))}">${escapeHtml(JSON.stringify(val))}</span>`;
+                            } else {
+                                const str = String(val);
+                                if (str.match(/\.(jpg|jpeg|png|webp|svg)/i) || str.startsWith('data:image')) {
+                                    displayVal = `<div class="flex items-center space-x-2"><img src="${str}" class="w-6 h-8 object-cover rounded border border-slate-700 cursor-pointer" onclick="openImagePreview('${str}', 'รูปภาพ')"><span class="truncate max-w-[120px] text-slate-400">${escapeHtml(str)}</span></div>`;
+                                } else {
+                                    displayVal = `<span class="text-slate-200 select-text">${escapeHtml(str)}</span>`;
+                                }
+                            }
+                            tbHtml += `<td class="py-2.5 px-4 font-mono text-xs whitespace-nowrap">${displayVal}</td>`;
+                        });
+                        tbHtml += '</tr>';
+                    });
+                    if (tbody) tbody.innerHTML = tbHtml;
+                }
+            } else {
+                if (countBadge) {
+                    countBadge.innerText = 'สำเร็จ';
+                    countBadge.className = 'text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-mono font-bold';
+                }
+                const thead = document.getElementById('sql-result-thead');
+                const tbody = document.getElementById('sql-result-tbody');
+                if (thead) thead.innerHTML = '<tr><th class="py-3 px-4 bg-slate-900/90 text-slate-300 border-b border-slate-700 font-mono text-[11px]">สถานะ / ตัวแปร</th><th class="py-3 px-4 bg-slate-900/90 text-slate-300 border-b border-slate-700 font-mono text-[11px]">ค่าที่ได้</th></tr>';
+
+                let tbHtml = '';
+                if (typeof data === 'object' && data !== null) {
+                    Object.entries(data).forEach(([k, v]) => {
+                        tbHtml += `<tr class="border-b border-slate-800"><td class="py-3 px-4 text-emerald-400 font-bold font-mono">${escapeHtml(k)}</td><td class="py-3 px-4 text-slate-200 font-mono">${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : String(v))}</td></tr>`;
+                    });
+                } else {
+                    tbHtml = `<tr class="border-b border-slate-800"><td class="py-3 px-4 text-emerald-400 font-bold font-mono">Result</td><td class="py-3 px-4 text-slate-200 font-mono">${escapeHtml(String(data))}</td></tr>`;
+                }
+                if (tbody) tbody.innerHTML = tbHtml;
+            }
+
+            switchSQLResultView(currentSQLResultView);
+        }
+
+        function switchSQLResultView(viewType) {
+            currentSQLResultView = viewType;
+            const btnTable = document.getElementById('btn-view-table');
+            const btnJson = document.getElementById('btn-view-json');
+            const tableContainer = document.getElementById('sql-table-view-container');
+            const jsonContainer = document.getElementById('sql-json-view-container');
+            const emptyState = document.getElementById('sql-empty-state');
+            const msgBox = document.getElementById('sql-message-box');
+            const hasError = msgBox && !msgBox.classList.contains('hidden');
+            const isEmpty = emptyState && !emptyState.classList.contains('hidden');
+
+            if (viewType === 'table') {
+                if (btnTable) btnTable.className = "px-3 py-1 rounded-lg font-bold bg-sky-500 text-white shadow transition";
+                if (btnJson) btnJson.className = "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition";
+                if (!hasError && !isEmpty) {
+                    if (tableContainer) tableContainer.classList.remove('hidden');
+                    if (jsonContainer) jsonContainer.classList.add('hidden');
+                }
+            } else {
+                if (btnJson) btnJson.className = "px-3 py-1 rounded-lg font-bold bg-sky-500 text-white shadow transition";
+                if (btnTable) btnTable.className = "px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition";
+                if (!hasError && !isEmpty) {
+                    if (jsonContainer) jsonContainer.classList.remove('hidden');
+                    if (tableContainer) tableContainer.classList.add('hidden');
+                }
+            }
+        }
+
+        function copySQLResult() {
+            if (!lastSQLResultData) {
+                alert('⚠️ ยังไม่มีผลลัพธ์จากการรัน SQL ให้คัดลอก');
+                return;
+            }
+            const text = typeof lastSQLResultData === 'string' ? lastSQLResultData : JSON.stringify(lastSQLResultData, null, 2);
+            navigator.clipboard.writeText(text);
+            alert('📋 คัดลอกผลลัพธ์ SQL ในรูปแบบ JSON ลงคลิปบอร์ดแล้ว!');
+        }
+
+        function downloadSQLResultJSON() {
+            if (!lastSQLResultData) {
+                alert('⚠️ ยังไม่มีผลลัพธ์จากการรัน SQL ให้ดาวน์โหลด');
+                return;
+            }
+            const json = JSON.stringify(lastSQLResultData, null, 2);
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `sql_result_${Date.now()}.json`;
+            link.click();
+        }
+
+        function openExecSqlHelpModal() {
+            document.getElementById('exec-sql-help-modal').classList.remove('hidden');
+        }
+
+        function closeExecSqlHelpModal() {
+            document.getElementById('exec-sql-help-modal').classList.add('hidden');
+        }
+
+        function copyExecSqlSnippet() {
+            const snippet = document.getElementById('exec-sql-code-snippet').innerText;
+            navigator.clipboard.writeText(snippet);
+            const icon = document.getElementById('copy-snippet-icon');
+            if (icon) icon.innerText = '✅';
+            setTimeout(() => { if (icon) icon.innerText = '📋'; }, 2000);
+            alert('📋 คัดลอกโค้ด SQL Stored Procedure แล้ว!\nนำไปวางและกด Run ใน Supabase SQL Editor ได้เลยครับ');
+        }
+
         // โหลดข้อมูลเริ่มต้นเมื่อเปิดหน้า
         window.addEventListener('DOMContentLoaded', () => {
             updateStatCounters();
             switchTable('ebooks'); // เริ่มต้นที่หน้า ebooks
+
+            // คีย์ลัด Ctrl + Enter สำหรับรัน SQL ใน textarea
+            const sqlTextarea = document.getElementById('sql-query-input');
+            if (sqlTextarea) {
+                sqlTextarea.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        executeUserSQL();
+                    }
+                });
+            }
         });
     </script>
 </body>
