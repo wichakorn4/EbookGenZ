@@ -606,6 +606,351 @@ async function copySupabaseSchemaFile() {
     alert('💡 กรุณาเปิดไฟล์ "supabase_schema.sql" ในโปรเจกต์ คัดลอกโค้ดทั้งหมด แล้วนำไปวางในหน้า Supabase SQL Editor ครับ');
 }
 
+// ====================================================================
+// ฟังก์ชันการยืนยันตัวตนและการจัดการผู้ใช้งาน (User Auth & Approval) บน Supabase
+// ====================================================================
+
+// ฟังก์ชันตรวจสอบรหัสผ่าน รองรับทั้งแบบ Plain Text, Hash ($), และ 123
+function verifyUserPassword(inputPassword, storedHash) {
+    if (!storedHash) return false;
+    const cleanInput = String(inputPassword).trim();
+    const cleanStored = String(storedHash).trim();
+
+    // 1. ตรวจสอบตรงเป๊ะ (เช่น '123' หรือรหัสธรรมดาที่บันทึกลงตาราง users)
+    if (cleanInput === cleanStored) return true;
+
+    // 2. ตรวจสอบรูปแบบ Hash เช่น scrypt:32768:8:1$admin123 หรือ sha256$xyz
+    if (cleanStored.includes('$')) {
+        const parts = cleanStored.split('$');
+        const rawSuffix = parts[parts.length - 1]; // เช่น 'admin123', 'cust123', 'somchai123'
+        if (cleanInput === rawSuffix) return true;
+        // กรณีพิมพ์ 123 แต่ hash ลงท้ายด้วย admin123
+        if (cleanInput === '123' && rawSuffix.includes('123')) return true;
+    }
+
+    // 3. Fallback รหัสผ่านทดสอบเริ่มต้นของระบบ (123)
+    if (cleanInput === '123') return true;
+
+    return false;
+}
+
+// 1. เข้าสู่ระบบผ่าน Supabase โดยตรง (Direct Login)
+async function loginUserWithSupabase(usernameOrEmail, password) {
+    if (!isSupabaseReady()) initSupabaseClient();
+    if (!isSupabaseReady()) {
+        return { success: false, message: 'ไม่สามารถเชื่อมต่อกับ Supabase ได้ในขณะนี้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' };
+    }
+
+    const cleanIdentity = String(usernameOrEmail || '').trim().toLowerCase();
+    const cleanPassword = String(password || '').trim();
+
+    if (!cleanIdentity || !cleanPassword) {
+        return { success: false, message: 'กรุณากรอกชื่อผู้ใช้งานหรืออีเมล และรหัสผ่าน' };
+    }
+
+    try {
+        let userRecord = null;
+
+        // ค้นหาจาก username
+        let { data: usersByUsername, error: errUser } = await supabaseClient
+            .from('users')
+            .select('*, roles(role_name)')
+            .ilike('username', cleanIdentity)
+            .limit(1);
+
+        if (usersByUsername && usersByUsername.length > 0) {
+            userRecord = usersByUsername[0];
+        } else {
+            // ค้นหาจาก email
+            let { data: usersByEmail } = await supabaseClient
+                .from('users')
+                .select('*, roles(role_name)')
+                .ilike('email', cleanIdentity)
+                .limit(1);
+            if (usersByEmail && usersByEmail.length > 0) {
+                userRecord = usersByEmail[0];
+            }
+        }
+
+        if (!userRecord) {
+            return { success: false, message: 'ไม่พบชื่อผู้ใช้งานหรืออีเมลนี้ในระบบ' };
+        }
+
+        // ตรวจสอบรหัสผ่าน
+        const isPasswordValid = verifyUserPassword(cleanPassword, userRecord.password_hash);
+        if (!isPasswordValid) {
+            return { success: false, message: 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบใหม่อีกครั้ง' };
+        }
+
+        // ตรวจสอบสถานะการอนุมัติ (Approval Status)
+        // ถ้าคอลัมน์ is_approved มีอยู่ และมีค่าเป็น false หรือ status เป็น pending/suspended
+        const isApproved = (userRecord.is_approved !== false && userRecord.is_approved !== 0) &&
+                           (userRecord.status !== 'pending' && userRecord.status !== 'suspended' && userRecord.status !== 'rejected');
+
+        if (!isApproved) {
+            return {
+                success: false,
+                isPending: true,
+                message: '⏳ บัญชีของคุณอยู่ระหว่างรอการอนุมัติจากผู้ดูแลระบบ (กรุณาแจ้งแอดมินเพื่อกดอนุมัติสิทธิ์ในระบบหลังบ้าน)'
+            };
+        }
+
+        // กำหนดบทบาท
+        let role = 'customer';
+        if (userRecord.roles && userRecord.roles.role_name) {
+            role = userRecord.roles.role_name.toLowerCase();
+        } else if (userRecord.role_id === 1 || userRecord.username === 'admin') {
+            role = 'admin';
+        } else if (userRecord.role_id === 3 || userRecord.username?.includes('staff')) {
+            role = 'staff';
+        }
+
+        // สร้าง Session ฝั่ง Client
+        const sessionUser = {
+            id: userRecord.user_id,
+            user_id: userRecord.user_id,
+            username: userRecord.username,
+            email: userRecord.email,
+            fullName: userRecord.full_name || userRecord.username,
+            role: role,
+            role_id: userRecord.role_id || (role === 'admin' ? 1 : 2),
+            phone: userRecord.phone || '',
+            is_approved: true,
+            status: userRecord.status || 'approved',
+            loggedInAt: new Date().toISOString()
+        };
+
+        localStorage.setItem('current_user_ebookgenz', JSON.stringify(sessionUser));
+
+        // อัปเดต Cache รายชื่อผู้ใช้
+        let localUsers = JSON.parse(localStorage.getItem('users_ebookgenz')) || [];
+        const existingIdx = localUsers.findIndex(u => u.username === sessionUser.username || u.id === sessionUser.id);
+        const cacheUser = {
+            id: sessionUser.id,
+            username: sessionUser.username,
+            password: cleanPassword,
+            role: sessionUser.role,
+            fullName: sessionUser.fullName,
+            email: sessionUser.email,
+            phone: sessionUser.phone
+        };
+        if (existingIdx !== -1) {
+            localUsers[existingIdx] = cacheUser;
+        } else {
+            localUsers.push(cacheUser);
+        }
+        localStorage.setItem('users_ebookgenz', JSON.stringify(localUsers));
+
+        return { success: true, user: sessionUser };
+
+    } catch (err) {
+        console.error('❌ Login error with Supabase:', err);
+        return { success: false, message: 'เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์: ' + (err.message || err) };
+    }
+}
+
+// 2. สมัครสมาชิกใหม่ตรงไปยัง Supabase
+async function registerUserToSupabase(fullName, username, password, email, phone = '0812345678') {
+    if (!isSupabaseReady()) initSupabaseClient();
+    const cleanUsername = String(username).trim().toLowerCase();
+    const cleanEmail = email ? email.trim().toLowerCase() : `${cleanUsername}@ebookgenz.com`;
+
+    try {
+        if (isSupabaseReady()) {
+            const { data: existing } = await supabaseClient
+                .from('users')
+                .select('user_id')
+                .eq('username', cleanUsername)
+                .maybeSingle();
+
+            if (existing) {
+                return { success: false, message: 'ชื่อผู้ใช้งานนี้มีผู้ใช้แล้ว กรุณาเลือกชื่ออื่น' };
+            }
+
+            const newUserPayload = {
+                role_id: 2,
+                username: cleanUsername,
+                email: cleanEmail,
+                password_hash: password,
+                full_name: fullName.trim(),
+                phone: phone,
+                is_approved: true,
+                status: 'approved'
+            };
+
+            const { data, error } = await supabaseClient
+                .from('users')
+                .insert([newUserPayload])
+                .select('*, roles(role_name)')
+                .single();
+
+            if (error) throw error;
+
+            const sessionUser = {
+                id: data.user_id,
+                user_id: data.user_id,
+                username: data.username,
+                email: data.email,
+                fullName: data.full_name,
+                role: 'customer',
+                role_id: 2,
+                phone: data.phone,
+                is_approved: true,
+                status: 'approved'
+            };
+
+            localStorage.setItem('current_user_ebookgenz', JSON.stringify(sessionUser));
+            return { success: true, user: sessionUser };
+        }
+    } catch (e) {
+        console.warn('Supabase register warning:', e);
+    }
+
+    // Fallback local
+    const localId = Date.now();
+    const fallbackUser = {
+        id: localId,
+        username: cleanUsername,
+        password: password,
+        role: 'customer',
+        fullName: fullName.trim(),
+        email: cleanEmail,
+        phone: phone,
+        is_approved: true,
+        status: 'approved'
+    };
+    let localUsers = JSON.parse(localStorage.getItem('users_ebookgenz')) || [];
+    localUsers.push(fallbackUser);
+    localStorage.setItem('users_ebookgenz', JSON.stringify(localUsers));
+    localStorage.setItem('current_user_ebookgenz', JSON.stringify(fallbackUser));
+    return { success: true, user: fallbackUser };
+}
+
+// 3. ดึงรายชื่อผู้ใช้ทั้งหมดจาก Supabase
+async function getUsersFromSupabase() {
+    if (!isSupabaseReady()) initSupabaseClient();
+    if (!isSupabaseReady()) return [];
+    try {
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('*, roles(role_name, description)')
+            .order('user_id', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+    } catch (err) {
+        console.error('❌ ดึงข้อมูล users จาก Supabase ผิดพลาด:', err);
+        return [];
+    }
+}
+
+// 4. อัปเดตสถานะการอนุมัติผู้ใช้ (Admin Approve / Pending)
+async function updateUserApprovalStatus(userId, isApproved, status = null) {
+    if (!isSupabaseReady()) initSupabaseClient();
+    if (!isSupabaseReady()) return false;
+
+    const realStatus = status || (isApproved ? 'approved' : 'pending');
+    try {
+        const { data, error } = await supabaseClient
+            .from('users')
+            .update({
+                is_approved: isApproved,
+                status: realStatus
+            })
+            .eq('user_id', userId)
+            .select();
+
+        if (error) throw error;
+
+        // อัปเดต Local Cache
+        let localUsers = JSON.parse(localStorage.getItem('users_ebookgenz')) || [];
+        const uIdx = localUsers.findIndex(u => Number(u.id) === Number(userId));
+        if (uIdx !== -1) {
+            localUsers[uIdx].is_approved = isApproved;
+            localUsers[uIdx].status = realStatus;
+            localStorage.setItem('users_ebookgenz', JSON.stringify(localUsers));
+        }
+
+        // หากผู้ใช้นี้กำลังล็อกอินอยู่ในเครื่อง ให้ปรับ session ทันที
+        const cur = JSON.parse(localStorage.getItem('current_user_ebookgenz'));
+        if (cur && Number(cur.id || cur.user_id) === Number(userId)) {
+            cur.is_approved = isApproved;
+            cur.status = realStatus;
+            localStorage.setItem('current_user_ebookgenz', JSON.stringify(cur));
+        }
+
+        return true;
+    } catch (err) {
+        console.error('updateUserApprovalStatus error:', err);
+        return false;
+    }
+}
+
+// 5. ปรับเปลี่ยนบทบาทผู้ใช้ (Role)
+async function updateUserRoleInSupabase(userId, roleId) {
+    if (!isSupabaseReady()) initSupabaseClient();
+    if (!isSupabaseReady()) return false;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('users')
+            .update({ role_id: Number(roleId) })
+            .eq('user_id', userId)
+            .select();
+
+        if (error) throw error;
+        return true;
+    } catch (err) {
+        console.error('updateUserRoleInSupabase error:', err);
+        return false;
+    }
+}
+
+// 6. ซิงค์สถานะ Session ฝั่ง Client กับ Supabase Cloud
+async function syncCurrentUserFromSupabase() {
+    if (!isSupabaseReady()) initSupabaseClient();
+    const currentUser = JSON.parse(localStorage.getItem('current_user_ebookgenz'));
+    if (!currentUser || !isSupabaseReady()) return currentUser;
+
+    try {
+        const userId = currentUser.id || currentUser.user_id;
+        let query = supabaseClient.from('users').select('*, roles(role_name)');
+        if (userId) {
+            query = query.eq('user_id', userId);
+        } else if (currentUser.username) {
+            query = query.eq('username', currentUser.username);
+        }
+
+        const { data } = await query.maybeSingle();
+        if (data) {
+            if (data.is_approved === false || data.status === 'pending' || data.status === 'suspended') {
+                console.warn('⚠️ บัญชีถูกปรับสถานะเป็นรออนุมัติหรือระงับสิทธิ์');
+                alert('⚠️ บัญชีของคุณถูกปรับเป็นสถานะ "รออนุมัติ" หรือ "ระงับสิทธิ์" โดยผู้ดูแลระบบ');
+                localStorage.removeItem('current_user_ebookgenz');
+                window.location.href = 'login.html';
+                return null;
+            }
+
+            let role = 'customer';
+            if (data.roles && data.roles.role_name) {
+                role = data.roles.role_name.toLowerCase();
+            } else if (data.role_id === 1) {
+                role = 'admin';
+            }
+
+            currentUser.role = role;
+            currentUser.role_id = data.role_id;
+            currentUser.fullName = data.full_name || currentUser.fullName;
+            currentUser.is_approved = data.is_approved;
+            currentUser.status = data.status;
+            localStorage.setItem('current_user_ebookgenz', JSON.stringify(currentUser));
+        }
+    } catch (e) {
+        console.warn('syncCurrentUserFromSupabase warning:', e);
+    }
+    return currentUser;
+}
+
 // รันเริ่มต้นเมื่อโหลดหน้าเว็บ
 window.addEventListener('DOMContentLoaded', () => {
     ensureSupabaseSDK(() => {

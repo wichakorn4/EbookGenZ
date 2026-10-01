@@ -50,84 +50,74 @@
 
 
     <!-- 📜 โค้ด JavaScript จัดการข้อมูล -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script src="supabase.js"></script>
     <script>
-        // 🔍 ฟังก์ชันดึงข้อมูลผู้ใช้จาก localStorage (ถ้ายังไม่มี ให้สร้างข้อมูลจำลองขึ้นมาให้อัตโนมัติทันที)
         function getActiveUser() {
-            const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
-            for (let key of keys) {
-                const data = localStorage.getItem(key);
-                if (data) {
-                    try {
-                        return JSON.parse(data);
-                    } catch (e) {}
-                }
-            }
-            
-            // 💡 ถ้าเช็คแล้วยังไม่มีใครล็อกอินเลย สร้าง User จำลองให้ทันที จะได้ไม่ต้องไปกด Console
-            const defaultUser = {
-                id: "user_default_01",
-                fullName: "Test01",
-                email: "test01@gmail.com"
-            };
-            localStorage.setItem('currentUser', JSON.stringify(defaultUser));
-            return defaultUser;
+            return (typeof getCurrentUser === 'function' && getCurrentUser()) || 
+                   JSON.parse(localStorage.getItem('current_user_ebookgenz')) || 
+                   JSON.parse(localStorage.getItem('currentUser')) || null;
         }
 
         // โหลดข้อมูลผู้ใช้ปัจจุบันมาใส่ในฟอร์มทันทีที่เปิดหน้าเว็บ
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof syncCurrentUserFromSupabase === 'function') {
+                await syncCurrentUserFromSupabase();
+            }
             const currentUser = getActiveUser();
             
             if (currentUser) {
                 document.getElementById('edit-fullname').value = currentUser.fullName || currentUser.name || currentUser.username || '';
                 document.getElementById('edit-email').value = currentUser.email || '';
+            } else {
+                alert('กรุณาเข้าสู่ระบบก่อนทำการตั้งค่าข้อมูลส่วนตัว');
+                window.location.href = 'login.html';
             }
         });
 
-       // 💾 ฟังก์ชันกดบันทึกข้อมูลที่แก้ไข
-function updateUserProfile() {
-    const newFullName = document.getElementById('edit-fullname').value.trim();
-    const newEmail = document.getElementById('edit-email').value.trim();
+        // 💾 ฟังก์ชันกดบันทึกข้อมูลที่แก้ไข
+        async function updateUserProfile() {
+            const newFullName = document.getElementById('edit-fullname').value.trim();
+            const newEmail = document.getElementById('edit-email').value.trim();
 
-    if (!newFullName || !newEmail) {
-        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-        return;
-    }
+            if (!newFullName || !newEmail) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
 
-    // 1. ดึงข้อมูลผู้ใช้ปัจจุบันหรือสร้างขึ้นมาใหม่ถ้ายังไม่มี
-    let currentUser = getActiveUser() || { id: "user_default_01" };
-    
-    // อัปเดตค่าใหม่
-    currentUser.fullName = newFullName;
-    currentUser.name = newFullName; // เผื่อระบบใช้คีย์ name
-    currentUser.email = newEmail;
+            let currentUser = getActiveUser();
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            currentUser.fullName = newFullName;
+            currentUser.name = newFullName;
+            currentUser.email = newEmail;
 
-    // 2. บันทึกทับลงทุกคีย์ที่เป็นไปได้ใน localStorage เพื่อความชัวร์ไม่ให้ข้อมูลตีกัน
-    const keys = ['currentUser', 'loggedInUser', 'user', 'loginUser'];
-    keys.forEach(key => {
-        if (localStorage.getItem(key)) {
-            localStorage.setItem(key, JSON.stringify(currentUser));
+            localStorage.setItem('current_user_ebookgenz', JSON.stringify(currentUser));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            // อัปเดตตาราง users บน Supabase Cloud
+            if (typeof isSupabaseReady === 'function' && isSupabaseReady()) {
+                try {
+                    const uId = currentUser.id || currentUser.user_id;
+                    if (uId) {
+                        await supabaseClient.from('users').update({
+                            full_name: newFullName,
+                            email: newEmail
+                        }).eq('user_id', uId);
+                    }
+                } catch(e) {
+                    console.warn('Sync profile to Supabase warning:', e);
+                }
+            }
+
+            alert('บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว!');
+            window.location.href = 'index.html';
         }
-    });
-    // บังคับเซ็ตลง currentUser ด้วยเสมอ
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-    // 3. อัปเดตรายชื่อในฐานข้อมูลรวมของผู้ใช้ทั้งหมด (users_ebookgenz)
-    const users = JSON.parse(localStorage.getItem('users_ebookgenz')) || [];
-    const index = users.findIndex(u => u.id === currentUser.id || u.email === currentUser.email);
-    if (index !== -1) {
-        users[index].fullName = newFullName;
-        users[index].name = newFullName;
-        users[index].email = newEmail;
-        localStorage.setItem('users_ebookgenz', JSON.stringify(users));
-    } else {
-        users.push(currentUser);
-        localStorage.setItem('users_ebookgenz', JSON.stringify(users));
-    }
-
-    alert('บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว!');
-    window.location.href = 'index.html'; // พาผู้ใช้กลับหน้าหลัก
-}
-    </script>
     </script>
 </body>
 </html>

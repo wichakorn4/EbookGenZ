@@ -484,16 +484,16 @@ GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;</
                 { role_id: 3, role_name: "staff", description: "เจ้าหน้าที่ฝ่ายบริการ ตรวจสอบสลิปและดูแลคลังสินค้า" }
             ],
             users: [
-                { user_id: 1, role_id: 1, username: "admin", email: "admin@ebookgenz.com", password_hash: "scrypt:32768:8:1$admin123", full_name: "ผู้ดูแลระบบหลัก", phone: "081-111-2233", created_at: "2026-08-01 08:00:00" },
-                { user_id: 2, role_id: 2, username: "customer", email: "customer@gmail.com", password_hash: "scrypt:32768:8:1$cust123", full_name: "คุณลูกค้า ทดสอบระบบ", phone: "089-222-3344", created_at: "2026-08-05 09:30:00" },
-                { user_id: 3, role_id: 2, username: "somchai_dev", email: "somchai@gmail.com", password_hash: "scrypt:32768:8:1$somchai123", full_name: "สมชาย สายโค้ด", phone: "086-333-4455", created_at: "2026-08-10 11:20:00" },
-                { user_id: 4, role_id: 2, username: "ariya_biz", email: "ariya@business.co.th", password_hash: "scrypt:32768:8:1$ariya123", full_name: "อริยา นักธุรกิจไฟแรง", phone: "085-444-5566", created_at: "2026-08-12 14:15:00" },
-                { user_id: 5, role_id: 2, username: "natthapon_k", email: "natthapon@hotmail.com", password_hash: "scrypt:32768:8:1$nattha123", full_name: "ณัฐพล การุณย์", phone: "082-555-6677", created_at: "2026-08-15 16:40:00" },
-                { user_id: 6, role_id: 2, username: "pimpa_design", email: "pimpa@designstudio.io", password_hash: "scrypt:32768:8:1$pimpa123", full_name: "พิมพา ดีไซน์เนอร์", phone: "084-666-7788", created_at: "2026-08-18 10:05:00" },
-                { user_id: 7, role_id: 2, username: "charlie_tech", email: "charlie@gmail.com", password_hash: "scrypt:32768:8:1$charlie123", full_name: "ชาลี ซอฟต์แวร์แมน", phone: "083-777-8899", created_at: "2026-08-20 13:50:00" },
-                { user_id: 8, role_id: 2, username: "kanokwan_m", email: "kanokwan@yahoo.com", password_hash: "scrypt:32768:8:1$kanok123", full_name: "กนกวรรณ มาร์เก็ตติ้ง", phone: "087-888-9900", created_at: "2026-08-22 17:25:00" },
-                { user_id: 9, role_id: 2, username: "thanawat_p", email: "thanawat@gmail.com", password_hash: "scrypt:32768:8:1$thana123", full_name: "ธนวัฒน์ โปรเจกต์", phone: "088-999-0011", created_at: "2026-08-25 19:10:00" },
-                { user_id: 10, role_id: 3, username: "staff_jane", email: "jane.staff@ebookgenz.com", password_hash: "scrypt:32768:8:1$jane123", full_name: "เจนจิรา ตรวจสลิป", phone: "080-000-1122", created_at: "2026-08-02 08:30:00" }
+                { user_id: 1, role_id: 1, username: "admin", email: "admin@ebookgenz.com", password_hash: "scrypt:32768:8:1$admin123", full_name: "ผู้ดูแลระบบหลัก", phone: "081-111-2233", is_approved: true, status: "approved", created_at: "2026-08-01 08:00:00" },
+                { user_id: 2, role_id: 2, username: "customer", email: "customer@gmail.com", password_hash: "scrypt:32768:8:1$cust123", full_name: "คุณลูกค้า ทดสอบระบบ", phone: "089-222-3344", is_approved: true, status: "approved", created_at: "2026-08-05 09:30:00" },
+                { user_id: 3, role_id: 2, username: "somchai_dev", email: "somchai@gmail.com", password_hash: "scrypt:32768:8:1$somchai123", full_name: "สมชาย สายโค้ด", phone: "086-333-4455", is_approved: true, status: "approved", created_at: "2026-08-10 11:20:00" },
+                { user_id: 4, role_id: 2, username: "ariya_biz", email: "ariya@business.co.th", password_hash: "scrypt:32768:8:1$ariya123", full_name: "อริยา นักธุรกิจไฟแรง", phone: "085-444-5566", is_approved: true, status: "approved", created_at: "2026-08-12 14:15:00" },
+                { user_id: 5, role_id: 2, username: "natthapon_k", email: "natthapon@hotmail.com", password_hash: "scrypt:32768:8:1$nattha123", full_name: "ณัฐพล การุณย์", phone: "082-555-6677", is_approved: true, status: "approved", created_at: "2026-08-15 16:40:00" },
+                { user_id: 6, role_id: 2, username: "pimpa_design", email: "pimpa@designstudio.io", password_hash: "scrypt:32768:8:1$pimpa123", full_name: "พิมพา ดีไซน์เนอร์", phone: "084-666-7788", is_approved: true, status: "approved", created_at: "2026-08-18 10:05:00" },
+                { user_id: 7, role_id: 2, username: "charlie_tech", email: "charlie@gmail.com", password_hash: "scrypt:32768:8:1$charlie123", full_name: "ชาลี ซอฟต์แวร์แมน", phone: "083-777-8899", is_approved: true, status: "approved", created_at: "2026-08-20 13:50:00" },
+                { user_id: 8, role_id: 2, username: "kanokwan_m", email: "kanokwan@yahoo.com", password_hash: "scrypt:32768:8:1$kanok123", full_name: "กนกวรรณ มาร์เก็ตติ้ง", phone: "087-888-9900", is_approved: true, status: "approved", created_at: "2026-08-22 17:25:00" },
+                { user_id: 9, role_id: 2, username: "thanawat_p", email: "thanawat@gmail.com", password_hash: "scrypt:32768:8:1$thana123", full_name: "ธนวัฒน์ โปรเจกต์", phone: "088-999-0011", is_approved: true, status: "approved", created_at: "2026-08-25 19:10:00" },
+                { user_id: 10, role_id: 3, username: "staff_jane", email: "jane.staff@ebookgenz.com", password_hash: "scrypt:32768:8:1$jane123", full_name: "เจนจิรา ตรวจสลิป", phone: "080-000-1122", is_approved: true, status: "approved", created_at: "2026-08-02 08:30:00" }
             ],
             categories: [
                 { category_id: 1, category_name: "Programming & Tech", category_slug: "programming", description: "หนังสือการเขียนโปรแกรม โค้ดดิ้ง สถาปัตยกรรมระบบ และเทคโนโลยีสมัยใหม่", icon: "💻" },
@@ -776,6 +776,8 @@ GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;</
                     { name: "password_hash", label: "รหัสผ่าน (Hash)", type: "text", required: true },
                     { name: "full_name", label: "ชื่อ-นามสกุล", type: "text", required: true },
                     { name: "phone", label: "เบอร์โทร", type: "text", required: false },
+                    { name: "is_approved", label: "อนุมัติแล้ว", type: "select", options: [{val: true, label: "✅ อนุมัติแล้ว (true)"}, {val: false, label: "⏳ รออนุมัติ (false)"}], default: true },
+                    { name: "status", label: "สถานะบัญชี", type: "select", options: [{val: "approved", label: "approved (อนุมัติ)"}, {val: "pending", label: "pending (รออนุมัติ)"}, {val: "suspended", label: "suspended (ระงับ)"}], default: "approved" },
                     { name: "created_at", label: "วันที่สมัคร", type: "datetime", defaultNow: true }
                 ]
             },

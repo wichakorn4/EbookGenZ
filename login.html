@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เข้าสู่ระบบ / สมัครสมาชิก - EbookGenZ</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>body { font-family: 'Prompt', sans-serif; }</style>
 </head>
@@ -96,35 +97,77 @@
             }
         }
 
-        function handleLogin() {
+        async function handleLogin() {
             const u = document.getElementById('log-username').value.trim();
             const p = document.getElementById('log-password').value.trim();
-            const res = login(u, p);
-            if(res.success) {
-                alert(`ยินดีต้อนรับคุณ ${res.user.fullName} 🎉`);
-                window.location.href = res.user.role === 'admin' ? 'admin.html' : 'index.html';
-            } else {
-                alert(res.message);
-            }
-        }
+            const btn = document.querySelector('#box-login button');
+            const originalText = btn ? btn.innerText : 'เข้าสู่ระบบ';
 
-        function handleRegister() {
-            const name = document.getElementById('reg-fullname').value.trim();
-            const email = document.getElementById('reg-email').value;
-            const u = document.getElementById('reg-username').value.trim();
-            const p = document.getElementById('reg-password').value.trim();
-
-            if(!name || !u || !p) {
-                alert('กรุณากรอกข้อมูลให้ครบทุกช่อง');
+            if (!u || !p) {
+                alert('⚠️ กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน');
                 return;
             }
 
-            const res = register(name, u, p);
-            if(res.success) {
-                alert('สมัครสมาชิกสำเร็จและเข้าสู่ระบบให้อัตโนมัติ! 🚀');
-                window.location.href = 'index.html';
-            } else {
-                alert(res.message);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ กำลังตรวจสอบกับ Supabase...';
+            }
+
+            try {
+                const res = await login(u, p);
+                if (res.success) {
+                    alert(`ยินดีต้อนรับคุณ ${res.user.fullName} 🎉\n(บทบาท: ${res.user.role})`);
+                    window.location.href = res.user.role === 'admin' ? 'admin.html' : 'index.html';
+                } else if (res.isPending) {
+                    alert(`⏳ บัญชีของคุณยังไม่ได้รับการอนุมัติ!\n\n${res.message}\n\nกรุณาติดต่อผู้ดูแลระบบ (Admin) เพื่ออนุมัติสิทธิ์เข้าใช้งานครับ`);
+                } else {
+                    alert(res.message || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + (err.message || err));
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('reg-fullname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const u = document.getElementById('reg-username').value.trim();
+            const p = document.getElementById('reg-password').value.trim();
+            const btn = document.querySelector('#box-register button');
+            const originalText = btn ? btn.innerText : 'สมัครสมาชิก';
+
+            if (!name || !u || !p) {
+                alert('⚠️ กรุณากรอกข้อมูลให้ครบทุกช่อง');
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ กำลังส่งข้อมูลไปยัง Supabase...';
+            }
+
+            try {
+                const res = await register(name, u, p, email);
+                if (res.success) {
+                    alert('🎉 สมัครสมาชิกสำเร็จและบันทึกลงตาราง users บน Supabase เรียบร้อยแล้ว! 🚀');
+                    window.location.href = 'index.html';
+                } else {
+                    alert(res.message);
+                }
+            } catch (err) {
+                console.error('Register error:', err);
+                alert('เกิดข้อผิดพลาด: ' + (err.message || err));
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
             }
         }
     </script>
