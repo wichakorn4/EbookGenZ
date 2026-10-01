@@ -278,8 +278,9 @@
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3 mt-5">
-                    <button id="btn-save-ebook" onclick="addNewEbook()"
+                <div class="flex flex-wrap items-center gap-3 mt-5">
+                    <input type="hidden" id="editing-ebook-id" value="">
+                    <button id="btn-save-ebook" onclick="handleEbookSubmit()"
                         class="bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white px-7 py-3 rounded-2xl text-xs font-black shadow-lg shadow-sky-500/25 transition transform active:scale-95 flex items-center gap-2">
                         <span id="save-ebook-icon">🚀</span>
                         <span id="save-ebook-text">บันทึกเพิ่มหนังสือลง Supabase</span>
@@ -287,6 +288,9 @@
                     <button type="button" onclick="resetEbookForm()"
                         class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-3 rounded-2xl text-xs font-bold transition">
                         🧹 ล้างช่องกรอก
+                    </button>
+                    <button type="button" id="btn-cancel-edit" onclick="cancelTopFormEdit()" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-3 rounded-2xl text-xs font-bold border border-rose-200 transition">
+                        ✕ ยกเลิกการแก้ไข
                     </button>
                 </div>
             </div>
@@ -722,10 +726,15 @@
                                 <option value="hidden" ${!isReady ? 'selected' : ''}>🔴 ปิดการขาย</option>
                             </select>
                         </td>
-                        <td class="py-4 px-6 text-center">
-                            <button onclick="deleteEbook(${bookId})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-1.5 rounded-xl text-xs font-black shadow-xs transition transform active:scale-95">
-                                🗑️ ลบ
-                            </button>
+                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="openEditEbookModal(${bookId})" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs transition transform active:scale-95 flex items-center gap-1" title="แก้ไขข้อมูลหนังสือ">
+                                    <span>✏️</span> <span>แก้ไข</span>
+                                </button>
+                                <button onclick="deleteEbook(${bookId})" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs transition transform active:scale-95 flex items-center gap-1" title="ลบหนังสือ">
+                                    <span>🗑️</span> <span>ลบ</span>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -886,6 +895,349 @@ ${errorMessage}`);
             const s = document.getElementById('admin-book-status'); if (s) s.value = 'ready';
         }
 
+        // =====================================================================
+        // ✨ ระบบแก้ไขข้อมูลหนังสือ (Edit/Update Book) ซิงค์กับ Supabase แบบเรียลไทม์
+        // =====================================================================
+
+        // 1. เปิด Modal แก้ไขข้อมูลหนังสือ และดึงข้อมูลเดิมมาใส่ในฟอร์ม
+        function openEditEbookModal(bookId) {
+            const book = currentAdminEbooks.find(b => String(b.ebook_id || b.id) === String(bookId));
+            if (!book) {
+                alert('⚠️ ไม่พบข้อมูลหนังสือรหัส #' + bookId);
+                return;
+            }
+
+            const realId = book.ebook_id || book.id;
+            const title = book.title || '';
+            const author = book.author || '';
+            const price = book.price !== undefined ? book.price : '';
+
+            // แปลงหมวดหมู่เป็น ID
+            let category_id = 1;
+            if (book.category_id) {
+                category_id = parseInt(book.category_id, 10);
+            } else if (book.category) {
+                const catMap = { 'programming': 1, 'business': 2, 'lifestyle': 3, 'ai_data': 4, 'Programming & Tech': 1, 'Business & Marketing': 2, 'Lifestyle & Design': 3, 'AI & Data Science': 4 };
+                category_id = catMap[book.category] || 1;
+            }
+
+            const cover = book.cover_image || book.cover || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80';
+            const file_url = book.file_url || 'files/sample.pdf';
+            const description = book.description || '';
+            const isActive = (book.is_active === 1 || book.is_active === '1' || book.status === 'ready') ? '1' : '0';
+
+            // ใส่ข้อมูลเดิมลงในฟอร์ม Modal
+            const idEl = document.getElementById('edit-ebook-id'); if (idEl) idEl.value = realId;
+            const badgeEl = document.getElementById('edit-ebook-id-badge'); if (badgeEl) badgeEl.innerText = '#' + realId;
+            const titleEl = document.getElementById('edit-title'); if (titleEl) titleEl.value = title;
+            const authorEl = document.getElementById('edit-author'); if (authorEl) authorEl.value = author;
+            const priceEl = document.getElementById('edit-price'); if (priceEl) priceEl.value = price;
+            const catEl = document.getElementById('edit-category'); if (catEl) catEl.value = String(category_id);
+            const statusEl = document.getElementById('edit-status'); if (statusEl) statusEl.value = isActive;
+            const fileEl = document.getElementById('edit-file-url'); if (fileEl) fileEl.value = file_url;
+            const coverEl = document.getElementById('edit-cover'); if (coverEl) coverEl.value = cover;
+            const previewEl = document.getElementById('edit-cover-preview'); if (previewEl) previewEl.src = cover;
+            const descEl = document.getElementById('edit-desc'); if (descEl) descEl.value = description;
+
+            // แสดง Modal
+            const modal = document.getElementById('edit-ebook-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        // 2. ปิด Modal แก้ไขข้อมูลหนังสือ
+        function closeEditEbookModal() {
+            const modal = document.getElementById('edit-ebook-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // 3. บันทึกการแก้ไขข้อมูลหนังสือลง Supabase (UPDATE ebooks)
+        async function saveEditEbook() {
+            const idVal = document.getElementById('edit-ebook-id').value;
+            const titleInput = document.getElementById('edit-title');
+            const authorInput = document.getElementById('edit-author');
+            const priceInput = document.getElementById('edit-price');
+            const categoryInput = document.getElementById('edit-category');
+            const statusInput = document.getElementById('edit-status');
+            const fileUrlInput = document.getElementById('edit-file-url');
+            const coverInput = document.getElementById('edit-cover');
+            const descInput = document.getElementById('edit-desc');
+
+            const title = titleInput ? titleInput.value.trim() : '';
+            const author = authorInput ? authorInput.value.trim() : '';
+            const priceRaw = priceInput ? priceInput.value.trim() : '';
+            const category_id = categoryInput ? parseInt(categoryInput.value, 10) : 1;
+            const is_active = statusInput ? parseInt(statusInput.value, 10) : 1;
+            const file_url = (fileUrlInput ? fileUrlInput.value.trim() : '') || 'files/sample.pdf';
+            const cover_image = (coverInput ? coverInput.value.trim() : '') || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80';
+            const description = descInput ? descInput.value.trim() : '';
+
+            // ตรวจสอบความถูกต้องของข้อมูล
+            if (!idVal) {
+                alert('⚠️ ไม่พบรหัสหนังสือที่ต้องการแก้ไข');
+                return;
+            }
+            if (!title) {
+                alert('⚠️ กรุณาระบุชื่อหนังสือ');
+                if (titleInput) titleInput.focus();
+                return;
+            }
+            if (!author) {
+                alert('⚠️ กรุณาระบุชื่อผู้แต่ง');
+                if (authorInput) authorInput.focus();
+                return;
+            }
+            if (priceRaw === '' || isNaN(parseFloat(priceRaw))) {
+                alert('⚠️ กรุณาระบุราคาหนังสือเป็นตัวเลข');
+                if (priceInput) priceInput.focus();
+                return;
+            }
+            const price = parseFloat(priceRaw);
+            if (price < 0) {
+                alert('⚠️ ราคาหนังสือต้องไม่ติดลบ');
+                if (priceInput) priceInput.focus();
+                return;
+            }
+
+            const ebookId = isNaN(Number(idVal)) ? idVal : Number(idVal);
+
+            const payload = {
+                title: title,
+                author: author,
+                price: price,
+                category_id: category_id,
+                cover_image: cover_image,
+                file_url: file_url,
+                description: description,
+                is_active: is_active
+            };
+
+            // อัปเดตสถานะปุ่มกำลังบันทึก
+            const btn = document.getElementById('btn-update-ebook');
+            const icon = document.getElementById('update-ebook-icon');
+            const text = document.getElementById('update-ebook-text');
+            if (btn) btn.disabled = true;
+            if (icon) icon.innerText = '⏳';
+            if (text) text.innerText = 'กำลังอัปเดตลง Supabase...';
+
+            try {
+                let updatedOnCloud = false;
+                let errorMessage = null;
+
+                // 1. ส่งคำสั่ง UPDATE ไปยัง Supabase Client
+                // ใน Supabase PostgreSQL คีย์หลักคือ ebook_id
+                if (typeof isSupabaseReady === 'function' && isSupabaseReady() && supabaseClient) {
+                    try {
+                        let res = await supabaseClient
+                            .from('ebooks')
+                            .update(payload)
+                            .eq('ebook_id', ebookId)
+                            .select();
+
+                        if (res.error) {
+                            // กรณีที่ตารางใช้ id ให้ลอง eq('id', ebookId) เพื่อความยืดหยุ่น
+                            const fallback = await supabaseClient
+                                .from('ebooks')
+                                .update(payload)
+                                .eq('id', ebookId)
+                                .select();
+                            if (!fallback.error) {
+                                updatedOnCloud = true;
+                            } else {
+                                errorMessage = res.error.message;
+                                console.error('❌ Supabase update error:', res.error);
+                            }
+                        } else {
+                            updatedOnCloud = true;
+                            console.log('✅ UPDATE E-Book บน Supabase สำเร็จ:', res.data);
+                        }
+                    } catch (e) {
+                        errorMessage = e.message;
+                        console.error('❌ Supabase update exception:', e);
+                    }
+                }
+
+                // 2. อัปเดตข้อมูลใน Local Cache / State สำรอง
+                const idx = currentAdminEbooks.findIndex(b => String(b.ebook_id || b.id) === String(ebookId));
+                if (idx !== -1) {
+                    currentAdminEbooks[idx] = {
+                        ...currentAdminEbooks[idx],
+                        ...payload,
+                        cover: cover_image,
+                        category: getCategoryNameById(category_id),
+                        status: is_active === 1 ? 'ready' : 'hidden'
+                    };
+                    localStorage.setItem('ebooks_data_genz', JSON.stringify(currentAdminEbooks));
+                }
+
+                // 3. ✨ ดึงข้อมูลใหม่จาก Supabase มาแสดงผล (Refresh table) ทันทีโดยไม่ต้องรีเฟรชหน้าเว็บ!
+                await loadAndRenderAdminEbooks(false);
+
+                // 4. ปิด Modal
+                closeEditEbookModal();
+
+                // 5. แจ้งเตือนผู้ใช้งาน
+                if (updatedOnCloud) {
+                    alert(`🎉 แก้ไขและอัปเดตข้อมูลหนังสือ "${title}" (#${ebookId}) บน Supabase Cloud เรียบร้อยแล้ว!
+(ตารางข้อมูลอัปเดตแบบเรียลไทม์ทันที)`);
+                } else if (errorMessage) {
+                    alert(`⚠️ อัปเดตใน Local สำเร็จ แต่ส่งขึ้น Supabase Cloud ไม่สำเร็จ:
+${errorMessage}`);
+                } else {
+                    alert(`✅ บันทึกการแก้ไขข้อมูลหนังสือ "${title}" เรียบร้อยแล้ว`);
+                }
+
+            } catch (err) {
+                console.error('saveEditEbook error:', err);
+                alert('❌ เกิดข้อผิดพลาดขณะบันทึกการแก้ไข: ' + (err.message || err));
+            } finally {
+                if (btn) btn.disabled = false;
+                if (icon) icon.innerText = '💾';
+                if (text) text.innerText = 'บันทึกการแก้ไขลง Supabase';
+            }
+        }
+
+        // 4. ดึงข้อมูลเดิมของหนังสือไปแสดงที่ฟอร์มด้านบน (Top Form)
+        function loadIntoTopForm(bookId) {
+            const book = currentAdminEbooks.find(b => String(b.ebook_id || b.id) === String(bookId));
+            if (!book) return;
+
+            const realId = book.ebook_id || book.id;
+            const editIdInput = document.getElementById('editing-ebook-id');
+            if (editIdInput) editIdInput.value = realId;
+
+            const titleInput = document.getElementById('new-title'); if (titleInput) titleInput.value = book.title || '';
+            const authorInput = document.getElementById('new-author'); if (authorInput) authorInput.value = book.author || '';
+            const priceInput = document.getElementById('new-price'); if (priceInput) priceInput.value = book.price !== undefined ? book.price : '';
+
+            let category_id = 1;
+            if (book.category_id) {
+                category_id = parseInt(book.category_id, 10);
+            } else if (book.category) {
+                const catMap = { 'programming': 1, 'business': 2, 'lifestyle': 3, 'ai_data': 4, 'Programming & Tech': 1, 'Business & Marketing': 2, 'Lifestyle & Design': 3, 'AI & Data Science': 4 };
+                category_id = catMap[book.category] || 1;
+            }
+            const catInput = document.getElementById('new-category'); if (catInput) catInput.value = String(category_id);
+            const statusInput = document.getElementById('admin-book-status'); if (statusInput) statusInput.value = (book.is_active === 1 || book.status === 'ready') ? 'ready' : 'hidden';
+            const fileUrlInput = document.getElementById('new-file-url'); if (fileUrlInput) fileUrlInput.value = book.file_url || 'files/sample.pdf';
+            const coverInput = document.getElementById('new-cover'); if (coverInput) coverInput.value = book.cover_image || book.cover || '';
+            const descInput = document.getElementById('new-desc'); if (descInput) descInput.value = book.description || '';
+
+            // เปลี่ยนข้อความปุ่มบันทึกด้านบน
+            const saveIcon = document.getElementById('save-ebook-icon');
+            const saveText = document.getElementById('save-ebook-text');
+            const cancelBtn = document.getElementById('btn-cancel-edit');
+            if (saveIcon) saveIcon.innerText = '💾';
+            if (saveText) saveText.innerText = `บันทึกการแก้ไขหนังสือ (#${realId}) ลง Supabase`;
+            if (cancelBtn) cancelBtn.classList.remove('hidden');
+
+            // ปิด Modal ถ้าเปิดอยู่
+            closeEditEbookModal();
+
+            // เลื่อนจอขึ้นไปยังฟอร์มด้านบน
+            if (titleInput) {
+                titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                titleInput.focus();
+            }
+        }
+
+        // 5. ยกเลิกโหมดแก้ไขที่ฟอร์มด้านบน
+        function cancelTopFormEdit() {
+            const editIdInput = document.getElementById('editing-ebook-id');
+            if (editIdInput) editIdInput.value = '';
+            resetEbookForm();
+            const saveIcon = document.getElementById('save-ebook-icon');
+            const saveText = document.getElementById('save-ebook-text');
+            const cancelBtn = document.getElementById('btn-cancel-edit');
+            if (saveIcon) saveIcon.innerText = '🚀';
+            if (saveText) saveText.innerText = 'บันทึกเพิ่มหนังสือลง Supabase';
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+        }
+
+        // 6. Router เมื่อกดปุ่มบันทึกที่ฟอร์มด้านบน
+        async function handleEbookSubmit() {
+            const editIdInput = document.getElementById('editing-ebook-id');
+            const editingId = editIdInput ? editIdInput.value : '';
+            if (editingId) {
+                // อยู่ในโหมดแก้ไขจากฟอร์มด้านบน
+                await saveEditEbookFromTopForm(editingId);
+            } else {
+                // อยู่ในโหมดเพิ่มเล่มใหม่
+                await addNewEbook();
+            }
+        }
+
+        // 7. บันทึกการแก้ไขเมื่อส่งจากฟอร์มด้านบน
+        async function saveEditEbookFromTopForm(bookId) {
+            const titleInput = document.getElementById('new-title');
+            const authorInput = document.getElementById('new-author');
+            const priceInput = document.getElementById('new-price');
+            const categoryInput = document.getElementById('new-category');
+            const coverInput = document.getElementById('new-cover');
+            const descInput = document.getElementById('new-desc');
+            const fileUrlInput = document.getElementById('new-file-url');
+            const statusInput = document.getElementById('admin-book-status');
+
+            const title = titleInput ? titleInput.value.trim() : '';
+            const author = authorInput ? authorInput.value.trim() : '';
+            const priceRaw = priceInput ? priceInput.value.trim() : '';
+            const category_id = categoryInput ? parseInt(categoryInput.value, 10) : 1;
+            const cover = (coverInput ? coverInput.value.trim() : '') || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80';
+            const description = descInput ? descInput.value.trim() : '';
+            const file_url = (fileUrlInput ? fileUrlInput.value.trim() : '') || 'files/sample.pdf';
+            const statusVal = statusInput ? statusInput.value : 'ready';
+            const is_active = (statusVal === 'ready' || statusVal === '1' || statusVal === 1) ? 1 : 0;
+
+            if (!title) { alert('⚠️ กรุณาระบุชื่อหนังสือ'); return; }
+            if (!author) { alert('⚠️ กรุณาระบุชื่อผู้แต่ง'); return; }
+            if (priceRaw === '' || isNaN(parseFloat(priceRaw))) { alert('⚠️ กรุณาระบุราคาหนังสือเป็นตัวเลข'); return; }
+            const price = parseFloat(priceRaw);
+            if (price < 0) { alert('⚠️ ราคาต้องไม่ติดลบ'); return; }
+
+            const realId = isNaN(Number(bookId)) ? bookId : Number(bookId);
+            const payload = {
+                title, author, price, category_id,
+                cover_image: cover, file_url, description, is_active
+            };
+
+            const btn = document.getElementById('btn-save-ebook');
+            const saveIcon = document.getElementById('save-ebook-icon');
+            const saveText = document.getElementById('save-ebook-text');
+            if (btn) btn.disabled = true;
+            if (saveIcon) saveIcon.innerText = '⏳';
+            if (saveText) saveText.innerText = 'กำลังอัปเดตลง Supabase...';
+
+            try {
+                let updatedOnCloud = false;
+                if (typeof isSupabaseReady === 'function' && isSupabaseReady() && supabaseClient) {
+                    try {
+                        let res = await supabaseClient.from('ebooks').update(payload).eq('ebook_id', realId).select();
+                        if (res.error) {
+                            const fallback = await supabaseClient.from('ebooks').update(payload).eq('id', realId).select();
+                            if (!fallback.error) updatedOnCloud = true;
+                        } else {
+                            updatedOnCloud = true;
+                        }
+                    } catch (e) {
+                        console.error('Supabase update error:', e);
+                    }
+                }
+
+                cancelTopFormEdit();
+                await loadAndRenderAdminEbooks(false);
+
+                if (updatedOnCloud) {
+                    alert(`🎉 แก้ไขและอัปเดตข้อมูลหนังสือ "${title}" (#${realId}) บน Supabase Cloud เรียบร้อยแล้ว!
+(ตารางข้อมูลอัปเดตแบบเรียลไทม์ทันที)`);
+                } else {
+                    alert(`✅ แก้ไขหนังสือ "${title}" เรียบร้อยแล้ว`);
+                }
+            } catch (err) {
+                alert('❌ เกิดข้อผิดพลาด: ' + (err.message || err));
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
         // ลบ E-Book จาก Supabase
         async function deleteEbook(bookId) {
             const book = currentAdminEbooks.find(b => b.id === bookId || b.ebook_id === bookId);
@@ -1019,9 +1371,17 @@ ${errorMessage}`);
             document.getElementById('slip-modal').classList.add('hidden');
         }
 
+        // ปิด Modal เมื่อกดปุ่ม Escape บนคีย์บอร์ด
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSlipModal();
+                closeEditEbookModal();
+            }
+        });
+
     </script>
     <!-- 🖼️ Modal แสดงรูปสลิปจริงพร้อมข้อมูลออเดอร์ -->
-    <div id="slip-modal"
+    <div id="slip-modal" onclick="if(event.target === this) closeSlipModal()"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
         <div
             class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center relative max-h-[90vh] overflow-y-auto">
@@ -1049,6 +1409,134 @@ ${errorMessage}`);
 
             <div id="slip-modal-info"></div>
             <div id="slip-modal-actions"></div>
+        </div>
+    </div>
+
+    <!-- 📚 Modal แก้ไขข้อมูลหนังสือ (Edit E-Book Modal) เชื่อมโยง Supabase Direct -->
+    <div id="edit-ebook-modal" onclick="if(event.target === this) closeEditEbookModal()"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-sky-100 relative max-h-[92vh] overflow-y-auto">
+
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 mb-5 border-b border-sky-100">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl font-bold shadow-sm">
+                        ✏️
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h3 class="text-lg font-black text-slate-900">แก้ไขข้อมูลหนังสือดิจิทัล</h3>
+                            <span id="edit-ebook-id-badge"
+                                class="text-xs bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-lg font-bold font-mono">#0</span>
+                            <span
+                                class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">⚡ Supabase Direct</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">แก้ไขข้อมูลและซิงค์การเปลี่ยนแปลงตรงไปยังตาราง <code
+                                class="text-sky-600 font-mono font-bold">ebooks</code> บน Cloud ทันที</p>
+                    </div>
+                </div>
+                <button onclick="closeEditEbookModal()"
+                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center text-sm transition">✕</button>
+            </div>
+
+            <!-- Form Content -->
+            <form id="edit-ebook-form" onsubmit="event.preventDefault(); saveEditEbook();" class="space-y-4">
+                <input type="hidden" id="edit-ebook-id">
+
+                <!-- Row 1: สถานะสินค้า และ หมวดหมู่ -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">สถานะสินค้า (is_active) *</label>
+                        <select id="edit-status"
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 font-bold transition">
+                            <option value="1">🟢 พร้อมขาย (is_active = 1)</option>
+                            <option value="0">🔴 ปิดการขายชั่วคราว (is_active = 0)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">หมวดหมู่ (category_id) *</label>
+                        <select id="edit-category"
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 font-medium transition">
+                            <option value="1">💻 1. Programming & Tech</option>
+                            <option value="2">📈 2. Business & Marketing</option>
+                            <option value="3">🎨 3. Lifestyle & Design</option>
+                            <option value="4">🧠 4. AI & Data Science</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 2: ชื่อหนังสือ และ ราคา -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ชื่อหนังสือ (title) *</label>
+                        <input type="text" id="edit-title" required
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 font-bold transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ราคา (price - บาท) *</label>
+                        <input type="number" id="edit-price" step="0.01" min="0" required
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 font-mono font-bold transition">
+                    </div>
+                </div>
+
+                <!-- Row 3: ผู้แต่ง และ ไฟล์ PDF -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ผู้แต่ง (author) *</label>
+                        <input type="text" id="edit-author" required
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ลิงก์ไฟล์ PDF (file_url) *</label>
+                        <input type="text" id="edit-file-url" required
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 font-mono text-xs transition">
+                    </div>
+                </div>
+
+                <!-- Row 4: ลิงก์รูปภาพปก + พรีวิวสด -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">ลิงก์ภาพปก (cover_image URL)</label>
+                    <div class="flex items-center space-x-3">
+                        <img id="edit-cover-preview" src="" alt="Cover Preview"
+                            class="w-12 h-16 object-cover rounded-xl border border-sky-200 shadow-sm flex-shrink-0 bg-slate-100"
+                            onerror="this.src='https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80'">
+                        <div class="flex-1">
+                            <input type="text" id="edit-cover"
+                                oninput="document.getElementById('edit-cover-preview').src = this.value || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=500&q=80'"
+                                class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 font-mono text-xs transition">
+                            <p class="text-[10px] text-slate-400 mt-1">ใส่ URL รูปภาพปก (Unsplash หรือ Web URL ทั่วไป)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 5: คำอธิบายหนังสือ -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">คำอธิบายหนังสือ (description)</label>
+                    <textarea id="edit-desc" rows="3"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-sky-200 rounded-2xl text-xs text-slate-800 focus:outline-none focus:border-sky-400 transition"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-4 border-t border-sky-100 flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" onclick="loadIntoTopForm(document.getElementById('edit-ebook-id').value)"
+                        class="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1 transition">
+                        <span>📋</span> <span>นำไปแก้ไขที่ฟอร์มด้านบน</span>
+                    </button>
+                    <div class="flex items-center space-x-2.5">
+                        <button type="button" onclick="closeEditEbookModal()"
+                            class="px-4 py-2.5 rounded-2xl text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="btn-update-ebook"
+                            class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-orange-500/20 transition transform active:scale-95 flex items-center gap-2">
+                            <span id="update-ebook-icon">💾</span>
+                            <span id="update-ebook-text">บันทึกการแก้ไขลง Supabase</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </body>

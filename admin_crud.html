@@ -1202,6 +1202,15 @@ GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;</
                 renderTableData();
                 closeCrudModal();
 
+                // ซิงค์ INSERT ไปยัง Supabase Cloud
+                if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                    supabaseClient.from(currentTableName).insert([record])
+                        .then(({ error }) => {
+                            if (error) console.warn('Supabase insert warning:', error.message);
+                            else console.log(`✅ Supabase insert into ${currentTableName} success`);
+                        }).catch(e => console.warn('Supabase insert error:', e));
+                }
+
                 const colsStr = Object.keys(record).join(', ');
                 const valsStr = Object.values(record).map(v => typeof v === 'string' ? `'${v}'` : v).join(', ');
                 updateSqlInspector(`INSERT INTO ${currentTableName} (${colsStr}) VALUES (${valsStr});`);
@@ -1214,6 +1223,17 @@ GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;</
                     saveDatabase();
                     renderTableData();
                     closeCrudModal();
+
+                    // ซิงค์ UPDATE ไปยัง Supabase Cloud
+                    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                        const updatePayload = { ...record };
+                        delete updatePayload[schema.pk];
+                        supabaseClient.from(currentTableName).update(updatePayload).eq(schema.pk, editingRowId)
+                            .then(({ error }) => {
+                                if (error) console.warn('Supabase update warning:', error.message);
+                                else console.log(`✅ Supabase update table ${currentTableName} #${editingRowId} success`);
+                            }).catch(e => console.warn('Supabase update error:', e));
+                    }
 
                     const setsStr = Object.entries(record)
                         .filter(([k]) => k !== schema.pk)
@@ -1265,6 +1285,16 @@ GRANT EXECUTE ON FUNCTION exec_sql(text) TO anon, authenticated, service_role;</
                 dataList.splice(index, 1);
                 saveDatabase();
                 renderTableData();
+
+                // ซิงค์ DELETE ไปยัง Supabase Cloud
+                if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                    supabaseClient.from(currentTableName).delete().eq(schema.pk, pkVal)
+                        .then(({ error }) => {
+                            if (error) console.warn('Supabase delete warning:', error.message);
+                            else console.log(`✅ Supabase delete from ${currentTableName} #${pkVal} success`);
+                        }).catch(e => console.warn('Supabase delete error:', e));
+                }
+
                 updateSqlInspector(`DELETE FROM ${currentTableName} WHERE ${schema.pk} = ${pkVal};`);
                 alert(`🗑️ ลบข้อมูล #${pkVal} สำเร็จ`);
             }
