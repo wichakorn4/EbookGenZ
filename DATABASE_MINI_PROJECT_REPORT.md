@@ -1,3 +1,19 @@
+<style>
+@media print {
+    body { font-family: 'Sarabun', 'Segoe UI', Tahoma, sans-serif; font-size: 13px; line-height: 1.5; color: #1e293b; }
+    h1 { font-size: 20px; page-break-after: avoid; }
+    h2 { font-size: 16px; margin-top: 18px; margin-bottom: 8px; page-break-after: avoid; }
+    h3 { font-size: 14px; margin-top: 14px; margin-bottom: 6px; page-break-after: avoid; }
+    h4 { font-size: 13px; margin-top: 10px; margin-bottom: 4px; page-break-after: avoid; }
+    table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin-bottom: 12px; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    thead { display: table-header-group; }
+    pre, code, .mermaid { page-break-inside: avoid; margin: 8px 0; }
+    hr { margin: 16px 0; border: none; border-top: 1px solid #cbd5e1; }
+    p, ul, ol { margin-top: 4px; margin-bottom: 8px; }
+}
+</style>
+
 # รายงานโครงงาน Mini Project ฐานข้อมูล: ระบบร้านขายหนังสือดิจิทัล EbookGenZ
 ## รายวิชา: Database Mini Project (โครงงานออกแบบและพัฒนาฐานข้อมูล)
 
@@ -90,91 +106,74 @@
 
 ```mermaid
 erDiagram
-    roles ||--o{ users : "defines role of"
-    users ||--o{ orders : "places"
-    categories ||--o{ ebooks : "categorizes"
-    orders ||--|{ order_items : "contains"
-    ebooks ||--o{ order_items : "is ordered in"
-    orders ||--|| payments : "is paid via"
-    orders ||--o{ download_links : "grants"
-    ebooks ||--o{ download_links : "is linked to"
+    roles ||--o{ users : "1:N (defines role)"
+    users ||--o{ orders : "1:N (places)"
+    categories ||--o{ ebooks : "1:N (categorizes)"
+    orders ||--|{ order_items : "1:N (contains)"
+    ebooks ||--o{ order_items : "1:N (referenced in)"
+    orders ||--|| payments : "1:1 (paid via)"
+    orders ||--o{ download_links : "1:N (grants)"
+    ebooks ||--o{ download_links : "1:N (links to)"
 
     roles {
         int role_id PK
-        varchar role_name UK
-        varchar description
+        varchar role_name
     }
-
     users {
         int user_id PK
         int role_id FK
-        varchar username UK
-        varchar email UK
-        varchar password_hash
+        varchar username
         varchar full_name
-        varchar phone
         boolean is_approved
-        varchar status
-        timestamptz created_at
     }
-
     categories {
         int category_id PK
-        varchar category_name UK
-        varchar category_slug UK
-        text description
-        varchar icon
+        varchar category_name
     }
-
     ebooks {
         int ebook_id PK
         int category_id FK
         varchar title
-        varchar author
         numeric price
-        text description
-        varchar cover_image
-        varchar file_url
         int is_active
-        timestamptz created_at
     }
-
     orders {
         int order_id PK
         int user_id FK
         numeric total_amount
         varchar order_status
-        timestamptz order_date
     }
-
     order_items {
         int order_item_id PK
         int order_id FK
         int ebook_id FK
         int quantity
-        numeric unit_price
         numeric subtotal
     }
-
     payments {
         int payment_id PK
-        int order_id FK,UK
-        varchar payment_method
-        text slip_image
+        int order_id FK
         varchar payment_status
-        timestamptz paid_at
     }
-
     download_links {
         int download_id PK
         int order_id FK
         int ebook_id FK
-        varchar download_token UK
-        timestamptz expire_at
-        int download_count
-        int max_downloads
+        varchar download_token
     }
 ```
+
+#### ตารางสรุปความสัมพันธ์และ Cardinality ทั้ง 8 ตาราง
+| ตารางหลัก (Parent) | Cardinality | ตารางย่อย (Child) | Foreign Key ที่เชื่อมโยง | คำอธิบายความสัมพันธ์เชิงธุรกิจ |
+| :--- | :---: | :--- | :--- | :--- |
+| `roles` | **1 : N** | `users` | `users.role_id` | 1 บทบาทสามารถมีผู้ใช้งานได้หลายคน (Admin, Customer, Staff) |
+| `users` | **1 : N** | `orders` | `orders.user_id` | ลูกค้า 1 คนสามารถมีประวัติการสั่งซื้อได้หลายคำสั่งซื้อ |
+| `categories` | **1 : N** | `ebooks` | `ebooks.category_id` | 1 หมวดหมู่ประกอบด้วยหนังสือหลายเล่ม |
+| `orders` | **1 : N** | `order_items` | `order_items.order_id` | 1 คำสั่งซื้อสามารถสั่งซื้อหนังสือได้หลายรายการ |
+| `ebooks` | **1 : N** | `order_items` | `order_items.ebook_id` | หนังสือ 1 เล่มสามารถถูกสั่งซื้อในหลายคำสั่งซื้อ |
+| `orders` | **1 : 1** | `payments` | `payments.order_id` | 1 คำสั่งซื้อผูกกับหลักฐานการชำระเงิน 1 รายการ (`UNIQUE`) |
+| `orders` | **1 : N** | `download_links` | `download_links.order_id` | 1 คำสั่งซื้อที่ยืนยันแล้วจะได้รับสิทธิ์และโทเคนดาวน์โหลดตามรายการหนังสือ |
+| `ebooks` | **1 : N** | `download_links` | `download_links.ebook_id` | หนังสือแต่ละเล่มเชื่อมโยงกับลิงก์ไฟล์ดาวน์โหลดเฉพาะรายการ |
 
 ---
 
