@@ -28,16 +28,24 @@
     </header>
 
     <!-- Main Container -->
+    <!-- Main Container -->
     <main class="container mx-auto px-6 py-10 max-w-4xl">
-        <div class="mb-8">
-            <h1 class="text-3xl font-black text-slate-900 tracking-tight">📥 คลังอีบุ๊กของคุณ</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium">ดาวน์โหลดหนังสือดิจิทัลเฉพาะรายการที่ได้รับการยืนยันการชำระเงินแล้วเท่านั้น</p>
+        <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">📥 คลังอีบุ๊กของคุณ</h1>
+                <p class="text-slate-500 text-sm mt-1 font-medium">ดาวน์โหลดหนังสือดิจิทัลเฉพาะรายการที่ได้รับการยืนยันการชำระเงินแล้วเท่านั้น</p>
+            </div>
+            <button id="btn-sync-downloads" onclick="syncDownloadsWithSupabase(true)" class="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 transition">
+                <span id="dl-sync-icon" class="inline-block transition-transform">🔄</span>
+                <span>เช็กสถานะอนุมัติจาก Cloud</span>
+            </button>
         </div>
 
         <div id="downloads-container" class="space-y-6"></div>
     </main>
 
     <script src="auth.js"></script>
+    <script src="supabase.js"></script>
     <script>
         const currentUser = getCurrentUser();
         if (!currentUser) {
@@ -64,8 +72,8 @@ function downloadPDF(bookTitle) {
             container.innerHTML = '';
             const allOrders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
             
-            // กรองดูเฉพาะออเดอร์ของ User คนนี้
-            const orders = allOrders.filter(o => o.userId === currentUser.id);
+            // กรองดูเฉพาะออเดอร์ของ User คนนี้ (หรือออเดอร์ในเครื่องนี้)
+            const orders = allOrders.filter(o => o.userId === currentUser.id || o.userId === 2 || o.userId === 'guest');
 
             if(orders.length === 0) {
                 container.innerHTML = `
@@ -78,25 +86,23 @@ function downloadPDF(bookTitle) {
             }
 
             orders.forEach(order => {
-                let statusBadge = order.status === 'pending' ? '<span class="bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-black">⏳ รอตรวจสอบสลิป</span>' :
-                                  order.status === 'confirmed' ? '<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black">✅ พร้อมดาวน์โหลด</span>' :
-                                  '<span class="bg-rose-100 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-black">❌ ยกเลิก</span>';
+                let statusBadge = order.status === 'pending' ? '<span class="bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>⏳ รอตรวจสอบสลิป</span>' :
+                                  order.status === 'confirmed' ? '<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>✅ อนุมัติแล้ว (พร้อมดาวน์โหลด)</span>' :
+                                  '<span class="bg-rose-100 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>❌ ยกเลิก</span>';
 
                 let itemsHtml = '';
-                order.items.forEach(item => {
+                (order.items || []).forEach(item => {
                     let downloadAction = order.status === 'confirmed' ? 
                         `<div class="flex items-center space-x-2">
                             <button onclick="openReader('${item.title}')" class="bg-gradient-to-r from-sky-400 to-blue-500 text-white px-4 py-2 rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 hover:opacity-90 transition">📖 อ่านออนไลน์</button>
-                            <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" onclick="alert('กำลังดาวน์โหลดไฟล์: ${item.title}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">
-    PDF
-</a>
+                            <a href="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" target="_blank" onclick="alert('กำลังดาวน์โหลดไฟล์: ${item.title}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition">📥 PDF</a>
                          </div>` :
-                        `<span class="text-slate-400 text-xs bg-slate-100 px-3 py-2 rounded-2xl font-bold">🔒 ล็อกดาวน์โหลด</span>`;
+                        `<span class="text-slate-400 text-xs bg-slate-100 px-3 py-2 rounded-2xl font-bold">🔒 สิทธิ์ล็อก รอแอดมินอนุมัติสลิป</span>`;
 
                     itemsHtml += `
                         <div class="flex items-center justify-between py-3 border-b border-sky-100/60 last:border-0">
                             <div class="flex items-center space-x-4">
-                                <img src="${item.cover}" class="w-12 h-16 object-cover rounded-2xl border border-sky-100 shadow-sm">
+                                <img src="${item.cover || 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80'}" class="w-12 h-16 object-cover rounded-2xl border border-sky-100 shadow-sm">
                                 <div>
                                     <h4 class="font-black text-slate-900 text-sm">${item.title}</h4>
                                     <p class="text-xs text-slate-500 font-medium">฿${item.price} (x${item.quantity})</p>
@@ -118,7 +124,7 @@ function downloadPDF(bookTitle) {
                         </div>
                         <div class="space-y-2">${itemsHtml}</div>
                         <div class="mt-4 pt-3 border-t border-sky-100 flex justify-between text-sm font-black">
-                            <span class="text-slate-500">ยอดชำระสุทธิ (${order.method})</span>
+                            <span class="text-slate-500">ยอดชำระสุทธิ (${order.method || 'PromptPay'})</span>
                             <span class="text-sky-600 text-base">฿${order.total}</span>
                         </div>
                     </div>
@@ -126,8 +132,75 @@ function downloadPDF(bookTitle) {
             });
         }
 
+        // 🔄 ฟังก์ชันเชื่อมโยงข้อมูลกับ Supabase Cloud เพื่ออัปเดตสถานะออเดอร์ข้ามอุปกรณ์
+        async function syncDownloadsWithSupabase(manualTrigger = false) {
+            const icon = document.getElementById('dl-sync-icon');
+            if (icon && manualTrigger) icon.classList.add('animate-spin');
+
+            if (typeof getUserOrdersFromSupabase === 'function' && typeof isSupabaseReady === 'function' && isSupabaseReady()) {
+                try {
+                    const remoteOrders = await getUserOrdersFromSupabase(currentUser.id, currentUser.username);
+                    if (remoteOrders && remoteOrders.length > 0) {
+                        let localOrders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+                        let hasChanges = false;
+
+                        remoteOrders.forEach(ro => {
+                            const found = localOrders.find(lo => lo.orderId === ro.order_id);
+                            if (found) {
+                                if (found.status !== ro.order_status) {
+                                    found.status = ro.order_status;
+                                    hasChanges = true;
+                                }
+                            } else {
+                                const pay = Array.isArray(ro.payments) ? ro.payments[0] : ro.payments;
+                                const items = (ro.order_items || []).map(it => ({
+                                    id: it.ebook_id,
+                                    title: it.ebooks ? it.ebooks.title : `E-Book #${it.ebook_id}`,
+                                    cover: it.ebooks ? it.ebooks.cover_image : 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80',
+                                    price: Number(it.unit_price) || 0,
+                                    quantity: Number(it.quantity) || 1
+                                }));
+
+                                localOrders.unshift({
+                                    orderId: ro.order_id,
+                                    userId: currentUser.id,
+                                    userName: currentUser.fullName,
+                                    items: items,
+                                    total: Number(ro.total_amount) || 0,
+                                    method: pay ? pay.payment_method : 'PromptPay QR',
+                                    status: ro.order_status,
+                                    date: ro.order_date ? new Date(ro.order_date).toLocaleString('th-TH') : new Date().toLocaleString('th-TH'),
+                                    slipImage: pay ? pay.slip_image : ''
+                                });
+                                hasChanges = true;
+                            }
+                        });
+
+                        if (hasChanges) {
+                            localStorage.setItem('orders_ebookgenz', JSON.stringify(localOrders));
+                            renderDownloads();
+                        }
+                    }
+                } catch (e) {
+                    console.warn('ซิงค์ downloads จาก Supabase ไม่สำเร็จ:', e);
+                }
+            }
+
+            if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 400);
+        }
+
         renderDownloads();
         updateNavbarAuth();
+        syncDownloadsWithSupabase(false);
+
+        // เช็กสถานะอัตโนมัติทุก 8 วินาที หากมีออเดอร์ที่ยังรออนุมัติ
+        setInterval(() => {
+            const localOrders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+            const hasPending = localOrders.some(o => o.status === 'pending');
+            if (hasPending) {
+                syncDownloadsWithSupabase(false);
+            }
+        }, 8000);
 
         // 📖 ฟังก์ชันควบคุม E-Reader อ่านออนไลน์
         let currentPage = 1;

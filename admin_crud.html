@@ -34,7 +34,12 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center flex-wrap gap-2 text-xs font-bold">
+                <button onclick="openSupabaseConfigModal()" title="ตั้งค่าหรือเชื่อมต่อกับ Supabase" class="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/40 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <span>⚡ ตั้งค่า Supabase</span>
+                </button>
+                <button onclick="syncAllFromSupabase()" title="ดึงข้อมูลล่าสุดจาก Supabase Cloud" class="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <span>☁️ ซิงค์จาก Cloud</span>
+                </button>
                 <button onclick="confirmResetSeedData()" title="รีเซ็ตฐานข้อมูลเป็นค่าเริ่มต้น 30+ รายการ" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-2 rounded-xl transition flex items-center gap-1.5">
                     <span>🔄 รีเซ็ต Seed Data (30+ ออเดอร์)</span>
                 </button>
@@ -227,7 +232,8 @@
         </div>
     </div>
 
-    <!-- JavaScript Data Logic -->
+    <!-- JavaScript Data Logic & Supabase Integration -->
+    <script src="supabase.js"></script>
     <script>
         // =====================================================================
         // โครงสร้างฐานข้อมูลเริ่มต้น (Seed Data สำหรับ 8 ตาราง)
@@ -1126,6 +1132,49 @@
 
         function closeImagePreview() {
             document.getElementById('image-preview-modal').classList.add('hidden');
+        }
+
+        // ซิงค์ดึงข้อมูลสดทั้งหมดจาก Supabase Cloud
+        async function syncAllFromSupabase() {
+            if (typeof isSupabaseReady !== 'function' || !isSupabaseReady()) {
+                alert('⚠️ ยังไม่ได้เชื่อมต่อ Supabase\nกรุณาคลิกปุ่ม "⚡ ตั้งค่า Supabase" ด้านบนเพื่อระบุ URL และ Key ก่อน');
+                if (typeof openSupabaseConfigModal === 'function') openSupabaseConfigModal();
+                return;
+            }
+
+            if (!confirm('ต้องการดึงข้อมูลล่าสุดจาก Supabase Cloud มาแทนที่ข้อมูลบนเครื่องใช่หรือไม่?')) {
+                return;
+            }
+
+            try {
+                const [rolesRes, usersRes, catsRes, booksRes, ordersRes, itemsRes, paysRes, linksRes] = await Promise.all([
+                    supabaseClient.from('roles').select('*').order('role_id', { ascending: true }),
+                    supabaseClient.from('users').select('*').order('user_id', { ascending: true }),
+                    supabaseClient.from('categories').select('*').order('category_id', { ascending: true }),
+                    supabaseClient.from('ebooks').select('*').order('ebook_id', { ascending: true }),
+                    supabaseClient.from('orders').select('*').order('order_id', { ascending: true }),
+                    supabaseClient.from('order_items').select('*').order('order_item_id', { ascending: true }),
+                    supabaseClient.from('payments').select('*').order('payment_id', { ascending: true }),
+                    supabaseClient.from('download_links').select('*').order('download_id', { ascending: true })
+                ]);
+
+                if (rolesRes.data && rolesRes.data.length > 0) db.roles = rolesRes.data;
+                if (usersRes.data && usersRes.data.length > 0) db.users = usersRes.data;
+                if (catsRes.data && catsRes.data.length > 0) db.categories = catsRes.data;
+                if (booksRes.data && booksRes.data.length > 0) db.ebooks = booksRes.data;
+                if (ordersRes.data && ordersRes.data.length > 0) db.orders = ordersRes.data;
+                if (itemsRes.data && itemsRes.data.length > 0) db.order_items = itemsRes.data;
+                if (paysRes.data && paysRes.data.length > 0) db.payments = paysRes.data;
+                if (linksRes.data && linksRes.data.length > 0) db.download_links = linksRes.data;
+
+                saveDatabase();
+                renderTableData();
+                updateStatCounters();
+                alert('🎉 ซิงค์ข้อมูลทั้งหมด 8 ตารางจาก Supabase สำเร็จเรียบร้อยแล้ว!');
+            } catch (err) {
+                console.error(err);
+                alert('❌ เกิดข้อผิดพลาดขณะดึงข้อมูลจาก Supabase: ' + err.message);
+            }
         }
 
         // โหลดข้อมูลเริ่มต้นเมื่อเปิดหน้า

@@ -176,6 +176,7 @@
     </div>
 
     <script src="auth.js"></script>
+    <script src="supabase.js"></script>
     <script>
         // ⚡ บังคับอัปเดตชื่อผู้ใช้จาก localStorage มาแสดงที่ปุ่มมุมขวาบนทันที
         window.addEventListener('DOMContentLoaded', () => {
@@ -359,7 +360,31 @@
             document.getElementById('cart-count').innerText = cart.reduce((sum, item) => sum + item.quantity, 0);
         }
 
-        displayEbooks(JSON.parse(localStorage.getItem('ebooks_data_genz')) || ebooks);
+        // โหลดหนังสือแบบซิงค์กับ Supabase
+        async function loadEbooksWithSupabase() {
+            displayEbooks(JSON.parse(localStorage.getItem('ebooks_data_genz')) || ebooks);
+            setTimeout(async () => {
+                if (typeof getEbooksFromSupabase === 'function' && typeof isSupabaseReady === 'function' && isSupabaseReady()) {
+                    const remoteBooks = await getEbooksFromSupabase();
+                    if (remoteBooks && remoteBooks.length > 0) {
+                        const mapped = remoteBooks.map(b => ({
+                            id: b.ebook_id,
+                            title: b.title,
+                            author: b.author,
+                            price: Number(b.price),
+                            category: b.categories ? b.categories.category_slug : 'programming',
+                            cover: b.cover_image,
+                            description: b.description,
+                            status: b.is_active === 1 ? 'ready' : 'hidden'
+                        }));
+                        localStorage.setItem('ebooks_data_genz', JSON.stringify(mapped));
+                        displayEbooks(mapped);
+                    }
+                }
+            }, 300);
+        }
+
+        loadEbooksWithSupabase();
         updateNavbarAuth();
 
         // อนิเมชั่นเวลากดคลิกลิงก์เปลี่ยนหน้า

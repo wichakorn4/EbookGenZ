@@ -40,21 +40,68 @@
             </a>
         </div>
 
-        <!-- TAB 1: จัดการคำสั่งซื้อ -->
+        <!-- TAB 1: จัดการคำสั่งซื้อ (ดึงข้อมูลสดจาก Supabase Cloud) -->
         <div id="section-orders" class="space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-black text-slate-900">ตรวจสอบคำสั่งซื้อและสลิป</h2>
-                <button onclick="clearAllOrders()" class="bg-white text-rose-500 hover:bg-rose-50 px-4 py-2 rounded-2xl text-xs font-bold border border-rose-200 shadow-sm transition">ล้างข้อมูลออเดอร์ทั้งหมด</button>
+            <div class="flex flex-wrap items-center justify-between gap-4 bg-white/80 backdrop-blur p-4 rounded-3xl border border-sky-100 shadow-sm">
+                <div>
+                    <div class="flex items-center space-x-2.5">
+                        <h2 class="text-2xl font-black text-slate-900">ตรวจสอบคำสั่งซื้อและสลิป</h2>
+                        <span id="supabase-sync-indicator" class="flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>⚡ Supabase Cloud Sync</span>
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">ดึงข้อมูลคำสั่งซื้อและสลิปที่ลูกค้าส่งมาจากมือถือแบบเรียลไทม์ ตรวจสอบและอนุมัติข้ามอุปกรณ์ได้ทันที</p>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <button id="btn-refresh-orders" onclick="loadAndRenderAdminOrders(true)" class="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white rounded-2xl text-xs font-black shadow-md shadow-sky-500/20 transition">
+                        <span id="refresh-icon" class="inline-block transition-transform">🔄</span>
+                        <span>รีเฟรชข้อมูล Cloud</span>
+                    </button>
+                    <label class="flex items-center space-x-1.5 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-2xl font-bold cursor-pointer transition select-none">
+                        <input type="checkbox" id="auto-refresh-check" checked onchange="toggleAutoRefresh(this.checked)" class="rounded text-sky-500 accent-sky-500">
+                        <span>อัปเดตอัตโนมัติ (10s)</span>
+                    </label>
+                    <button onclick="clearAllOrders()" class="bg-white text-rose-500 hover:bg-rose-50 px-3 py-2 rounded-2xl text-xs font-bold border border-rose-200 shadow-sm transition">ล้างแคช</button>
+                </div>
             </div>
+
+            <!-- กล่องสรุปสถานะออเดอร์ย่อ -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white/90 backdrop-blur p-4 rounded-2xl border border-amber-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-amber-600 font-bold uppercase tracking-wider">⏳ รอตรวจสอบสลิป</p>
+                        <h3 id="count-pending" class="text-2xl font-black text-slate-900 mt-1">0</h3>
+                    </div>
+                    <span class="text-3xl">⏳</span>
+                </div>
+                <div class="bg-white/90 backdrop-blur p-4 rounded-2xl border border-emerald-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider">✅ อนุมัติแล้ว (สิทธิ์เปิด)</p>
+                        <h3 id="count-confirmed" class="text-2xl font-black text-slate-900 mt-1">0</h3>
+                    </div>
+                    <span class="text-3xl">✅</span>
+                </div>
+                <div class="bg-white/90 backdrop-blur p-4 rounded-2xl border border-sky-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-sky-600 font-bold uppercase tracking-wider">📦 รวมออเดอร์ทั้งหมด</p>
+                        <h3 id="count-total" class="text-2xl font-black text-slate-900 mt-1">0</h3>
+                    </div>
+                    <span class="text-3xl">📊</span>
+                </div>
+            </div>
+
             <div class="bg-white/90 backdrop-blur rounded-3xl border border-sky-100 overflow-hidden shadow-xl shadow-sky-500/5">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-400 text-xs uppercase tracking-wider border-b border-sky-100 font-black">
-                            <th class="py-4 px-6">เลขออเดอร์ & วันที่</th>
+                            <th class="py-4 px-6">เลขออเดอร์ & ลูกค้า</th>
                             <th class="py-4 px-6">รายการสินค้า</th>
-                            <th class="py-4 px-6">ยอดชำระ</th>
+                            <th class="py-4 px-6">ยอดชำระ & วิธีจ่าย</th>
+                            <th class="py-4 px-6">หลักฐานสลิป</th>
                             <th class="py-4 px-6">สถานะ</th>
-                            <th class="py-4 px-6 text-center">จัดการ</th>
+                            <th class="py-4 px-6 text-center">การจัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="admin-orders-list" class="divide-y divide-sky-100 text-sm"></tbody>
@@ -132,6 +179,7 @@
     </main>
 
     <script src="auth.js"></script>
+    <script src="supabase.js"></script>
     <script>
 
         // 🧪 โค้ดจำลองข้อมูลออเดอร์พร้อมรูปสลิป สำหรับทดสอบหน้าแอดมิน
@@ -178,55 +226,225 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // จัดการออเดอร์
-        function renderAdminOrders() {
-            const tbody = document.getElementById('admin-orders-list');
-            tbody.innerHTML = '';
-            const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+        // จัดการออเดอร์ - เชื่อมต่อกับ Supabase Cloud ดึงข้อมูลสดแบบ Real-Time
+        let currentAdminOrders = [];
+        let autoRefreshTimer = null;
 
-            if(orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 text-slate-400 font-medium">ไม่มีคำสั่งซื้อในระบบ</td></tr>`;
+        async function loadAndRenderAdminOrders(manualTrigger = false) {
+            const refreshIcon = document.getElementById('refresh-icon');
+            if (refreshIcon && manualTrigger) {
+                refreshIcon.classList.add('animate-spin');
+            }
+
+            // 1. ดึงจาก Supabase Cloud ก่อนเป็นหลัก
+            let fetchedFromCloud = false;
+            if (typeof getOrdersFromSupabase === 'function' && typeof isSupabaseReady === 'function' && isSupabaseReady()) {
+                try {
+                    const remoteOrders = await getOrdersFromSupabase();
+                    if (remoteOrders && Array.isArray(remoteOrders)) {
+                        currentAdminOrders = remoteOrders.map(ro => {
+                            const pay = Array.isArray(ro.payments) ? ro.payments[0] : ro.payments;
+                            const items = (ro.order_items || []).map(it => ({
+                                id: it.ebook_id,
+                                title: it.ebooks ? it.ebooks.title : `E-Book #${it.ebook_id}`,
+                                author: it.ebooks ? it.ebooks.author : '',
+                                cover: it.ebooks ? it.ebooks.cover_image : 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80',
+                                price: Number(it.unit_price) || 0,
+                                quantity: Number(it.quantity) || 1,
+                                subtotal: Number(it.subtotal) || 0
+                            }));
+
+                            return {
+                                orderId: ro.order_id,
+                                userId: ro.user_id,
+                                userName: ro.users ? ro.users.full_name : 'ลูกค้าทั่วไป',
+                                userEmail: ro.users ? ro.users.email : '',
+                                userPhone: ro.users ? ro.users.phone : '',
+                                items: items,
+                                total: Number(ro.total_amount) || 0,
+                                status: ro.order_status || 'pending',
+                                date: ro.order_date ? new Date(ro.order_date).toLocaleString('th-TH') : new Date().toLocaleString('th-TH'),
+                                method: pay ? pay.payment_method : 'PromptPay QR',
+                                paymentStatus: pay ? pay.payment_status : 'waiting_verify',
+                                slipImage: pay ? pay.slip_image : '',
+                                isCloud: true
+                            };
+                        });
+
+                        fetchedFromCloud = true;
+                        localStorage.setItem('orders_ebookgenz', JSON.stringify(currentAdminOrders));
+                    }
+                } catch (err) {
+                    console.warn('⚠️ ไม่สามารถดึง orders จาก Supabase ได้:', err);
+                }
+            }
+
+            // 2. ถ้าดึงจาก Cloud ไม่ได้ ให้ดึงจาก localStorage สำรอง
+            if (!fetchedFromCloud) {
+                currentAdminOrders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+            }
+
+            // 3. เรนเดอร์ลงในตาราง
+            renderOrdersTable();
+
+            if (refreshIcon) {
+                setTimeout(() => refreshIcon.classList.remove('animate-spin'), 400);
+            }
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('admin-orders-list');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            // อัปเดตตัวเลขนับสรุป
+            const pendingCount = currentAdminOrders.filter(o => o.status === 'pending').length;
+            const confirmedCount = currentAdminOrders.filter(o => o.status === 'confirmed').length;
+            const totalCount = currentAdminOrders.length;
+
+            if (document.getElementById('count-pending')) document.getElementById('count-pending').innerText = pendingCount;
+            if (document.getElementById('count-confirmed')) document.getElementById('count-confirmed').innerText = confirmedCount;
+            if (document.getElementById('count-total')) document.getElementById('count-total').innerText = totalCount;
+
+            if (currentAdminOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-slate-400 font-medium">ยังไม่มีคำสั่งซื้อในระบบ Supabase Cloud</td></tr>`;
                 return;
             }
 
-            orders.forEach((order, index) => {
+            currentAdminOrders.forEach((order) => {
                 let itemsList = '';
-                order.items.forEach(item => {
-                    itemsList += `<div class="text-xs text-slate-700 font-medium">• ${item.title} (x${item.quantity})</div>`;
+                (order.items || []).forEach(item => {
+                    itemsList += `
+                        <div class="flex items-center space-x-2 py-0.5">
+                            <img src="${item.cover || 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80'}" class="w-6 h-8 object-cover rounded shadow-xs border border-sky-100">
+                            <span class="text-xs text-slate-700 font-medium line-clamp-1">${item.title} <b class="text-slate-900 font-black">(x${item.quantity})</b></span>
+                        </div>
+                    `;
                 });
 
-                let statusBadge = order.status === 'pending' ? '<span class="bg-amber-100 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-black">⏳ รอตรวจสอบ</span>' :
-                                  order.status === 'confirmed' ? '<span class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black">✅ ยืนยันแล้ว</span>' :
-                                  '<span class="bg-rose-100 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-black">❌ ยกเลิก</span>';
+                let statusBadge = '';
+                if (order.status === 'pending') {
+                    statusBadge = '<span class="bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>รอตรวจสอบสลิป</span>';
+                } else if (order.status === 'confirmed') {
+                    statusBadge = '<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>อนุมัติแล้ว</span>';
+                } else {
+                    statusBadge = '<span class="bg-rose-100 text-rose-800 border border-rose-200 px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span>ยกเลิกแล้ว</span>';
+                }
+
+                // ปุ่มดูสลิป
+                let slipCell = '';
+                if (order.slipImage && order.slipImage.length > 20) {
+                    slipCell = `
+                        <button onclick="viewSlip(${order.orderId})" class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold border border-sky-200 shadow-sm transition">
+                            <span>🖼️ ดูสลิป</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        </button>
+                    `;
+                } else {
+                    slipCell = `<span class="text-xs text-slate-400 font-medium">ไม่มีสลิป</span>`;
+                }
+
+                // ปุ่มจัดการสถานะ
+                let actionBtns = '';
+                if (order.status === 'pending') {
+                    actionBtns = `
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="updateOrderStatus(${order.orderId}, 'confirmed')" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 transition">✅ ยืนยัน</button>
+                            <button onclick="updateOrderStatus(${order.orderId}, 'cancelled')" class="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl text-xs font-bold transition">❌ ปฏิเสธ</button>
+                        </div>
+                    `;
+                } else if (order.status === 'confirmed') {
+                    actionBtns = `
+                        <div class="text-center">
+                            <span class="text-xs text-emerald-600 font-bold block">สิทธิ์ดาวน์โหลดเปิดแล้ว</span>
+                            <button onclick="updateOrderStatus(${order.orderId}, 'cancelled')" class="text-[11px] text-slate-400 hover:text-rose-600 transition underline mt-0.5">เปลี่ยนเป็นยกเลิก</button>
+                        </div>
+                    `;
+                } else {
+                    actionBtns = `
+                        <div class="text-center">
+                            <button onclick="updateOrderStatus(${order.orderId}, 'confirmed')" class="px-3 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-xs font-bold border border-sky-200 transition">กู้คืน / อนุมัติ</button>
+                        </div>
+                    `;
+                }
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-sky-50/50 transition">
-                        <td class="py-4 px-6"><span class="font-black text-slate-900">#${order.orderId}</span><div class="text-xs text-slate-400">${order.date}</div><div class="text-[11px] text-sky-600 font-bold">ลูกค้า: ${order.userName || 'ทั่วไป'}</div></td>
+                        <td class="py-4 px-6">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-black text-slate-900 text-sm">#${order.orderId}</span>
+                                ${order.isCloud ? '<span class="text-[10px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded font-bold">Cloud</span>' : ''}
+                            </div>
+                            <div class="text-[11px] text-slate-400 font-medium">${order.date}</div>
+                            <div class="text-xs text-sky-700 font-bold mt-1">👤 ${order.userName}</div>
+                            ${order.userEmail ? `<div class="text-[10px] text-slate-400">${order.userEmail}</div>` : ''}
+                        </td>
                         <td class="py-4 px-6">${itemsList}</td>
-                        <td class="py-4 px-6 font-black text-sky-600">฿${order.total}</td>
+                        <td class="py-4 px-6">
+                            <div class="font-black text-sky-600 text-base">฿${order.total.toLocaleString()}</div>
+                            <div class="text-[11px] text-slate-500 font-bold mt-0.5">${order.method}</div>
+                        </td>
+                        <td class="py-4 px-6 text-center">${slipCell}</td>
                         <td class="py-4 px-6">${statusBadge}</td>
-                        <td class="py-4 px-6 text-center space-x-2">
-                        <button onclick="viewSlip(${index})" class="px-3 py-1.5 bg-sky-50 text-sky-600 hover:bg-sky-100 rounded-xl font-bold transition text-xs">ดูสลิป</button>
-                        <button onclick="updateOrderStatus(${index}, 'confirmed')" class="px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold transition text-xs">ยืนยัน</button>
-                        <button onclick="updateOrderStatus(${index}, 'cancelled')" class="px-3 py-1.5 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-xl font-bold transition text-xs">ยกเลิก</button>
-                    </td>
+                        <td class="py-4 px-6 text-center">${actionBtns}</td>
                     </tr>
                 `;
             });
         }
 
-        function updateOrderStatus(index, newStatus) {
-            const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
-            orders[index].status = newStatus;
-            localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
-            renderAdminOrders();
-            alert(`เปลี่ยนสถานะออเดอร์ #${orders[index].orderId} เรียบร้อยแล้ว`);
+        async function updateOrderStatus(orderId, newStatus) {
+            const statusLabel = newStatus === 'confirmed' ? 'อนุมัติคำสั่งซื้อและเปิดสิทธิ์ดาวน์โหลด' : 'ยกเลิกคำสั่งซื้อ';
+            if (!confirm(`ต้องการ${statusLabel} ออเดอร์ #${orderId} ใช่หรือไม่?`)) return;
+
+            // 1. ส่งข้อมูลอัปเดตไปยัง Supabase Cloud
+            let cloudUpdated = false;
+            if (typeof updateOrderStatusInSupabase === 'function' && typeof isSupabaseReady === 'function' && isSupabaseReady()) {
+                cloudUpdated = await updateOrderStatusInSupabase(orderId, newStatus);
+            }
+
+            // 2. อัปเดตใน state และ localStorage
+            currentAdminOrders = currentAdminOrders.map(o => {
+                if (o.orderId === orderId) {
+                    o.status = newStatus;
+                    if (newStatus === 'confirmed') o.paymentStatus = 'success';
+                    if (newStatus === 'cancelled') o.paymentStatus = 'rejected';
+                }
+                return o;
+            });
+            localStorage.setItem('orders_ebookgenz', JSON.stringify(currentAdminOrders));
+            renderOrdersTable();
+
+            if (cloudUpdated) {
+                alert(`🎉 บันทึกการ${statusLabel} ออเดอร์ #${orderId} ไปยัง Supabase Cloud เรียบร้อยแล้ว!\nลูกค้าบนมือถือสามารถเข้าอ่านหรือดาวน์โหลดไฟล์ได้ทันที`);
+            } else {
+                alert(`เปลี่ยนสถานะออเดอร์ #${orderId} เรียบร้อยแล้ว`);
+            }
         }
 
         function clearAllOrders() {
-            if(confirm('ต้องการล้างออเดอร์ทั้งหมดใช่หรือไม่?')) {
+            if (confirm('ต้องการล้างแคชออเดอร์ทั้งหมดในเครื่องนี้ใช่หรือไม่? (ข้อมูลบน Supabase Cloud จะยังคงอยู่)')) {
                 localStorage.removeItem('orders_ebookgenz');
-                renderAdminOrders();
+                currentAdminOrders = [];
+                renderOrdersTable();
+            }
+        }
+
+        // ระบบ Auto-Refresh ข้อมูลออเดอร์จาก Supabase อัตโนมัติทุก 10 วินาที
+        function setupAutoRefresh() {
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            autoRefreshTimer = setInterval(() => {
+                const checkbox = document.getElementById('auto-refresh-check');
+                if (checkbox && checkbox.checked) {
+                    loadAndRenderAdminOrders(false);
+                }
+            }, 10000);
+        }
+
+        function toggleAutoRefresh(enabled) {
+            if (enabled) {
+                setupAutoRefresh();
+            } else if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
             }
         }
 
@@ -310,40 +528,96 @@ function updateBookStatus(bookId, newStatus) {
             }
         }
 
-        renderAdminOrders();
+        // เริ่มต้นโหลดข้อมูลจาก Supabase Cloud และเปิดระบบ Auto-Refresh
+        loadAndRenderAdminOrders();
+        setupAutoRefresh();
 
-// 🔍 ฟังก์ชันเปิดดูสลิปโดยอ้างอิงจาก index ของออเดอร์
-function viewSlip(index) {
-    const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
-    const order = orders[index];
-    
-    const modal = document.getElementById('slip-modal');
-    const img = document.getElementById('slip-image-preview');
-    
-    if (order && order.slipImage && order.slipImage.trim() !== '') {
-        img.src = order.slipImage; // แสดงรูปสลิปจริงของผู้ใช้
-    } else {
-        img.src = "https://placehold.co/300x450/f8fafc/475569.png?text=No+Slip+Provided";
-    }
-    modal.classList.remove('hidden');
-}
-// ❌ ฟังก์ชันปิด Modal
-function closeSlipModal() {
-    document.getElementById('slip-modal').classList.add('hidden');
-}
+        // 🔍 ฟังก์ชันเปิดดูสลิปโดยอ้างอิงจาก orderId (ดึงรูปสลิปจาก Supabase หรือ Cloud Cache)
+        function viewSlip(orderId) {
+            const order = currentAdminOrders.find(o => o.orderId === Number(orderId) || o.orderId === orderId);
+            if (!order) return;
+
+            const modal = document.getElementById('slip-modal');
+            const img = document.getElementById('slip-image-preview');
+            const placeholder = document.getElementById('slip-no-image-notice');
+            const info = document.getElementById('slip-modal-info');
+            const actions = document.getElementById('slip-modal-actions');
+
+            if (order.slipImage && order.slipImage.trim().length > 20) {
+                img.src = order.slipImage;
+                img.classList.remove('hidden');
+                if (placeholder) placeholder.classList.add('hidden');
+            } else {
+                img.src = "";
+                img.classList.add('hidden');
+                if (placeholder) placeholder.classList.remove('hidden');
+            }
+
+            if (info) {
+                info.innerHTML = `
+                    <div class="text-left bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1.5 text-xs text-slate-700">
+                        <div class="flex justify-between items-center"><span class="text-slate-400 font-medium">หมายเลขออเดอร์:</span><span class="font-black text-slate-900">#${order.orderId}</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400 font-medium">ชื่อลูกค้า:</span><span class="font-bold text-sky-700">${order.userName}</span></div>
+                        ${order.userEmail ? `<div class="flex justify-between items-center"><span class="text-slate-400 font-medium">อีเมลลูกค้า:</span><span class="text-slate-600 font-medium">${order.userEmail}</span></div>` : ''}
+                        <div class="flex justify-between items-center"><span class="text-slate-400 font-medium">ยอดชำระ:</span><span class="font-black text-sky-600 text-sm">฿${order.total.toLocaleString()}</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400 font-medium">ช่องทางการชำระ:</span><span class="font-bold text-slate-800">${order.method}</span></div>
+                        <div class="flex justify-between items-center"><span class="text-slate-400 font-medium">วันที่/เวลาส่งสลิป:</span><span class="text-slate-500 font-medium">${order.date}</span></div>
+                    </div>
+                `;
+            }
+
+            if (actions) {
+                if (order.status === 'pending') {
+                    actions.innerHTML = `
+                        <div class="grid grid-cols-2 gap-2 mt-4">
+                            <button onclick="updateOrderStatus(${order.orderId}, 'confirmed'); closeSlipModal();" class="py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 transition">✅ อนุมัติออเดอร์นี้</button>
+                            <button onclick="updateOrderStatus(${order.orderId}, 'cancelled'); closeSlipModal();" class="py-2.5 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl text-xs font-bold transition">❌ ปฏิเสธสลิป</button>
+                        </div>
+                        <button onclick="closeSlipModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs mt-2 transition">ปิดหน้าต่าง</button>
+                    `;
+                } else {
+                    actions.innerHTML = `
+                        <div class="mt-4">
+                            <button onclick="closeSlipModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-bold text-xs transition">ปิดหน้าต่าง</button>
+                        </div>
+                    `;
+                }
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        // ❌ ฟังก์ชันปิด Modal
+        function closeSlipModal() {
+            document.getElementById('slip-modal').classList.add('hidden');
+        }
 
     </script>
-    <!-- 🖼️ Modal แสดงรูปสลิปจริง -->
-<div id="slip-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center relative">
-        <h3 class="text-base font-black text-slate-900 mb-4">หลักฐานการชำระเงิน (สลิป)</h3>
-        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 mb-4 flex justify-center items-center min-h-[300px]">
-            <img id="slip-image-preview" src="" alt="Slip Preview" class="max-h-96 object-contain rounded-xl shadow-sm">
+    <!-- 🖼️ Modal แสดงรูปสลิปจริงพร้อมข้อมูลออเดอร์ -->
+    <div id="slip-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-center relative max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                <div class="flex items-center space-x-2 text-left">
+                    <span class="text-xl">📸</span>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900">หลักฐานการชำระเงิน (สลิป)</h3>
+                        <p class="text-[11px] text-slate-400">ดึงสดจากตาราง payments บน Supabase</p>
+                    </div>
+                </div>
+                <button onclick="closeSlipModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center text-xs">✕</button>
+            </div>
+
+            <div class="bg-slate-50 p-2 rounded-2xl border border-slate-100 mb-3 flex justify-center items-center min-h-[260px] relative">
+                <img id="slip-image-preview" src="" alt="Slip Preview" class="max-h-80 w-auto object-contain rounded-xl shadow-sm">
+                <div id="slip-no-image-notice" class="hidden text-center p-6 text-slate-400 text-xs">
+                    <span class="text-3xl block mb-2">🧾</span>
+                    <span>ไม่พบรูปสลิปสำหรับคำสั่งซื้อนี้</span>
+                </div>
+            </div>
+
+            <div id="slip-modal-info"></div>
+            <div id="slip-modal-actions"></div>
         </div>
-        <button onclick="closeSlipModal()" class="w-full bg-slate-900 text-white py-3 rounded-2xl font-bold text-xs hover:bg-slate-800 transition">
-            ปิดหน้าต่าง
-        </button>
     </div>
-</div>
 </body>
 </html>

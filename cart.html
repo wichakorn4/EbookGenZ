@@ -53,54 +53,119 @@
                     </select>
 
                     <!-- 📱 กล่อง QR Code จำลอง -->
-    <div id="qr-code-section" class="hidden my-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl text-center">
-        <p class="text-xs font-bold text-sky-900 mb-2">สแกน QR Code เพื่อชำระเงิน</p>
-        <div class="bg-white p-3 inline-block rounded-xl shadow-sm border border-slate-100">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EbookGenZ-Payment-Simulation" alt="PromptPay QR" class="w-32 h-32 mx-auto">
-        </div>
-        <p class="text-[11px] text-slate-500 mt-2">พร้อมเพย์: 081-234-5678 (EbookGenZ)</p>
-    </div>
+                    <div id="qr-code-section" class="my-4 p-4 bg-sky-50 border border-sky-100 rounded-2xl text-center">
+                        <p class="text-xs font-bold text-sky-900 mb-2">สแกน QR Code เพื่อชำระเงิน</p>
+                        <div class="bg-white p-3 inline-block rounded-xl shadow-sm border border-slate-100">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EbookGenZ-Payment-Simulation" alt="PromptPay QR" class="w-32 h-32 mx-auto">
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-2 font-medium">พร้อมเพย์: <span class="font-bold text-slate-800">081-234-5678</span> (บจก. อีบุ๊ค เจนซ์)</p>
+                    </div>
 
-    <!-- 🏦 กล่องข้อมูลบัญชีธนาคารจำลอง (ซ่อนไว้ก่อน จะแสดงเฉพาะตอนเลือก Bank Transfer) -->
-<div id="bank-section" class="hidden my-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-left">
-    <p class="text-xs font-bold text-indigo-900 mb-2 text-center">โอนเงินผ่านบัญชีธนาคาร</p>
-    <div class="space-y-1.5 text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
-        <div class="flex justify-between">
-            <span class="text-slate-500">ธนาคาร:</span>
-            <span class="font-bold text-slate-900">กสิกรไทย (KBANK)</span>
-        </div>
-        <div class="flex justify-between">
-            <span class="text-slate-500">เลขที่บัญชี:</span>
-            <span class="font-bold text-indigo-600 select-all">123-4-56789-0</span>
-        </div>
-        <div class="flex justify-between">
-            <span class="text-slate-500">ชื่อบัญชี:</span>
-            <span class="font-bold text-slate-900">บจก. อีบุ๊ค เจนซ์</span>
-        </div>
-    </div>
-</div>
-
+                    <!-- 🏦 กล่องข้อมูลบัญชีธนาคารจำลอง -->
+                    <div id="bank-section" class="hidden my-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-left">
+                        <p class="text-xs font-bold text-indigo-900 mb-2 text-center">โอนเงินผ่านบัญชีธนาคาร</p>
+                        <div class="space-y-1.5 text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">ธนาคาร:</span>
+                                <span class="font-bold text-slate-900">กสิกรไทย (KBANK)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">เลขที่บัญชี:</span>
+                                <span class="font-bold text-indigo-600 select-all">123-4-56789-0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-500">ชื่อบัญชี:</span>
+                                <span class="font-bold text-slate-900">บจก. อีบุ๊ค เจนซ์</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- 📸 ช่องแนบสลิปชำระเงิน พร้อมพรีวิวและบีบอัดรูปสำหรับมือถือ -->
                 <div class="mb-6">
-                    <label class="block text-xs font-bold text-slate-700 mb-1">แนบสลิปชำระเงิน</label>
-                    <input type="file" class="w-full text-xs text-slate-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-2xl file:border-0 file:text-xs file:font-black file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 transition">
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>แนบสลิปชำระเงิน *</span>
+                        <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">📸 บีบอัดส่ง Cloud ทันที</span>
+                    </label>
+                    <div class="border-2 border-dashed border-sky-200 hover:border-sky-400 bg-slate-50/80 rounded-2xl p-4 text-center cursor-pointer transition relative" onclick="document.getElementById('slip-input').click()">
+                        <input type="file" id="slip-input" accept="image/*" class="hidden" onchange="handleSlipSelect(this)">
+                        
+                        <div id="slip-upload-placeholder" class="space-y-1.5 py-2">
+                            <span class="text-3xl block">📸</span>
+                            <p class="text-xs font-bold text-slate-700">แตะเพื่อถ่ายรูปสลิป หรือเลือกจากอัลบั้ม</p>
+                            <p class="text-[11px] text-slate-400 font-medium">ระบบจะย่อขนาดให้อัตโนมัติและส่งขึ้น Supabase ทันที</p>
+                        </div>
+
+                        <div id="slip-preview-container" class="hidden flex flex-col items-center space-y-2 py-1">
+                            <img id="slip-preview-img" src="" class="max-h-48 rounded-xl border border-sky-200 shadow-sm object-contain">
+                            <div class="flex items-center space-x-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                                <span>✅ แนบสลิปเรียบร้อย</span>
+                                <button type="button" onclick="event.stopPropagation(); removeSelectedSlip();" class="text-rose-500 hover:text-rose-700 font-bold underline ml-2">เปลี่ยนรูป</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <button onclick="checkout()" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-sky-500/25 hover:opacity-90 transition">ยืนยันการสั่งซื้อ ✨</button>
+                <button id="btn-checkout" onclick="checkout()" class="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-sky-500/25 hover:opacity-90 transition">ยืนยันการสั่งซื้อ ✨</button>
             </div>
         </div>
     </main>
 
     <script src="auth.js"></script>
+    <script src="supabase.js"></script>
     <script>
         let cart = getUserCart();
+        let selectedSlipBase64 = "";
+
+        // จัดการเมื่อผู้ใช้เลือกไฟล์สลิป (ย่อขนาดอัตโนมัติเพื่อรองรับภาพจากกล้องมือถือ)
+        async function handleSlipSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const placeholder = document.getElementById('slip-upload-placeholder');
+                placeholder.innerHTML = `<span class="text-xl">⏳</span><p class="text-xs font-bold text-sky-600">กำลังประมวลผลรูปสลิป...</p>`;
+
+                try {
+                    if (typeof compressSlipImage === 'function') {
+                        selectedSlipBase64 = await compressSlipImage(file, 900, 1200, 0.82);
+                    } else {
+                        selectedSlipBase64 = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve(e.target.result);
+                            reader.readAsDataURL(file);
+                        });
+                    }
+
+                    document.getElementById('slip-upload-placeholder').classList.add('hidden');
+                    document.getElementById('slip-preview-container').classList.remove('hidden');
+                    document.getElementById('slip-preview-img').src = selectedSlipBase64;
+                } catch (e) {
+                    console.error('ประมวลผลสลิปไม่สำเร็จ:', e);
+                    alert('ไม่สามารถอ่านไฟล์รูปภาพได้ กรุณาลองใหม่อีกครั้ง');
+                    removeSelectedSlip();
+                }
+            }
+        }
+
+        // ยกเลิกสลิปที่เลือก
+        function removeSelectedSlip() {
+            selectedSlipBase64 = "";
+            const input = document.getElementById('slip-input');
+            if (input) input.value = "";
+            document.getElementById('slip-preview-container').classList.add('hidden');
+            const placeholder = document.getElementById('slip-upload-placeholder');
+            placeholder.classList.remove('hidden');
+            placeholder.innerHTML = `
+                <span class="text-3xl block">📸</span>
+                <p class="text-xs font-bold text-slate-700">แตะเพื่อถ่ายรูปสลิป หรือเลือกจากอัลบั้ม</p>
+                <p class="text-[11px] text-slate-400 font-medium">ระบบจะย่อขนาดให้อัตโนมัติและส่งขึ้น Supabase ทันที</p>
+            `;
+        }
 
         function renderCart() {
             const listContainer = document.getElementById('cart-items-list');
             listContainer.innerHTML = '';
 
-            if(cart.length === 0) {
+            if (cart.length === 0) {
                 listContainer.innerHTML = `
                     <div class="text-center py-16 bg-white/60 backdrop-blur border border-sky-100 rounded-3xl shadow-sm">
                         <p class="text-slate-500 mb-4 font-medium">ยังไม่มีสินค้าในตะกร้าของคุณเลย</p>
@@ -142,7 +207,7 @@
 
         function updateQty(index, change) {
             cart[index].quantity += change;
-            if(cart[index].quantity <= 0) cart.splice(index, 1);
+            if (cart[index].quantity <= 0) cart.splice(index, 1);
             saveUserCart(cart);
             renderCart();
         }
@@ -153,84 +218,115 @@
             renderCart();
         }
 
-        function checkout() {
-    // 1. ตรวจสอบการเข้าสู่ระบบ
-    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
-    if (!user) {
-        alert('กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ');
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    // 2. ตรวจสอบสินค้าในตะกร้า
-    if (!cart || cart.length === 0) {
-        alert('กรุณาเลือกสินค้าในตะกร้าก่อนทำการสั่งซื้อ');
-        return;
-    }
+        async function checkout() {
+            // 1. ตรวจสอบการเข้าสู่ระบบ
+            const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+            if (!user) {
+                alert('กรุณาเข้าสู่ระบบก่อนทำการสั่งซื้อ');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // 2. ตรวจสอบสินค้าในตะกร้า
+            if (!cart || cart.length === 0) {
+                alert('กรุณาเลือกสินค้าในตะกร้าก่อนทำการสั่งซื้อ');
+                return;
+            }
 
-    // 3. ค้นหาช่องอัปโหลดไฟล์สลิปในหน้าเว็บ
-    const fileInput = document.querySelector('input[type="file"]');
+            // 3. แจ้งเตือนหากไม่ได้แนบสลิป
+            if (!selectedSlipBase64) {
+                const proceed = confirm('⚠️ คุณยังไม่ได้แนบหลักฐานการชำระเงิน (สลิป)\nต้องการยืนยันการสั่งซื้อโดยไม่มีสลิปหรือไม่? (แนะนำให้แนบสลิปเพื่อให้แอดมินอนุมัติออเดอร์ได้ทันที)');
+                if (!proceed) return;
+            }
 
-    // ฟังก์ชันบันทึกข้อมูลออเดอร์ลง localStorage
-    const processSave = (slipBase64) => {
-        const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
-        
-        orders.push({
-            orderId: Date.now(),
-            userId: user.id || 'guest',
-            userName: user.fullName || 'ทั่วไป',
-            items: cart,
-            total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-            method: document.getElementById('payment-method') ? document.getElementById('payment-method').value : 'QR Code',
-            status: 'pending',
-            date: new Date().toLocaleString(),
-            slipImage: slipBase64 // บันทึกรูปสลิปจริงของผู้ใช้
-        });
+            const btnCheckout = document.getElementById('btn-checkout');
+            btnCheckout.disabled = true;
+            btnCheckout.classList.add('opacity-75');
+            btnCheckout.innerHTML = `⏳ กำลังบันทึกคำสั่งซื้อและสลิปขึ้น Cloud...`;
 
-        localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
-        
-        // เคลียร์ตะกร้าสินค้า
-        if (typeof saveUserCart === 'function') {
-            saveUserCart([]);
-        } else {
-            localStorage.removeItem('cart');
+            try {
+                const paymentMethod = document.getElementById('payment-method') ? document.getElementById('payment-method').value : 'PromptPay';
+                const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+                // 4. บันทึกลง Supabase Cloud โดยตรง
+                let supabaseSuccess = false;
+                let newSupabaseOrderId = null;
+
+                if (typeof createOrderInSupabase === 'function' && typeof isSupabaseReady === 'function' && isSupabaseReady()) {
+                    const sbRes = await createOrderInSupabase({
+                        userId: user.id,
+                        username: user.username,
+                        fullName: user.fullName,
+                        email: user.email,
+                        total: totalAmount
+                    }, cart, selectedSlipBase64, paymentMethod);
+
+                    if (sbRes && sbRes.order) {
+                        supabaseSuccess = true;
+                        newSupabaseOrderId = sbRes.order.order_id;
+                        console.log('⚡ ออเดอร์และสลิปถูกบันทึกลง Supabase สำเร็จ ID:', newSupabaseOrderId);
+                    }
+                }
+
+                // 5. บันทึกและซิงค์ลงใน localStorage เพื่อความปลอดภัยและความต่อเนื่องในการแสดงผล
+                const finalOrderId = newSupabaseOrderId || Date.now();
+                const orders = JSON.parse(localStorage.getItem('orders_ebookgenz')) || [];
+                const newOrderObj = {
+                    orderId: finalOrderId,
+                    userId: user.id || 2,
+                    userName: user.fullName || 'ทั่วไป',
+                    items: [...cart],
+                    total: totalAmount,
+                    method: paymentMethod,
+                    status: 'pending',
+                    date: new Date().toLocaleString('th-TH'),
+                    slipImage: selectedSlipBase64
+                };
+
+                orders.unshift(newOrderObj);
+                localStorage.setItem('orders_ebookgenz', JSON.stringify(orders));
+
+                // 6. เคลียร์ตะกร้าสินค้า
+                if (typeof saveUserCart === 'function') {
+                    saveUserCart([]);
+                } else {
+                    localStorage.removeItem('cart');
+                }
+
+                // 7. แจ้งเตือนผู้ใช้และส่งต่อไปหน้าดาวน์โหลด
+                if (supabaseSuccess) {
+                    alert(`🎉 สั่งซื้อสำเร็จ! (ออเดอร์ #${finalOrderId})\nข้อมูลคำสั่งซื้อและสลิปถูกส่งตรงขึ้น Supabase Cloud เรียบร้อยแล้ว\nแอดมินสามารถเปิดดูสลิปและอนุมัติจากเครื่องอื่นได้ทันที! 🚀`);
+                } else {
+                    alert(`🎉 สั่งซื้อสำเร็จ! (ออเดอร์ #${finalOrderId})\nบันทึกข้อมูลเรียบร้อยแล้ว รอผู้ดูแลระบบตรวจสอบสลิป`);
+                }
+
+                window.location.href = 'downloads.html';
+            } catch (err) {
+                console.error('เกิดข้อผิดพลาดในการสั่งซื้อ:', err);
+                alert('เกิดข้อผิดพลาดในการสั่งซื้อ กรุณาลองใหม่อีกครั้ง');
+                btnCheckout.disabled = false;
+                btnCheckout.classList.remove('opacity-75');
+                btnCheckout.innerHTML = `ยืนยันการสั่งซื้อ ✨`;
+            }
         }
 
-        alert('สั่งซื้อสำเร็จ! รอผู้ดูแลระบบตรวจสอบสลิป');
-        window.location.href = 'downloads.html';
-    };
+        // 🔄 ควบคุมการสลับระหว่าง QR Code และ บัญชีธนาคาร
+        const paymentSelect = document.getElementById('payment-method');
+        const qrSection = document.getElementById('qr-code-section');
+        const bankSection = document.getElementById('bank-section');
 
-    // 4. ถ้ามีการแนบไฟล์สลิป ให้แปลงไฟล์เป็นรูปภาพก่อนบันทึก
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            processSave(e.target.result);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        processSave("");
-    }
-}
+        if (paymentSelect) {
+            paymentSelect.addEventListener('change', function() {
+                if (qrSection) qrSection.classList.add('hidden');
+                if (bankSection) bankSection.classList.add('hidden');
 
-        // 🔄 ควบคุมการแสดง QR Code และบัญชีธนาคาร (วางไว้นอกฟังก์ชันใดๆ)
-const paymentSelect = document.getElementById('payment-method');
-const qrSection = document.getElementById('qr-code-section');
-const bankSection = document.getElementById('bank-section');
-
-if (paymentSelect) {
-    paymentSelect.addEventListener('change', function() {
-        // ซ่อนกล่องทั้งหมดก่อน
-        if (qrSection) qrSection.classList.add('hidden');
-        if (bankSection) bankSection.classList.add('hidden');
-
-        // แสดงกล่องตามวิธีที่เลือก
-        if (this.value === 'PromptPay' && qrSection) {
-            qrSection.classList.remove('hidden');
-        } else if (this.value === 'Bank Transfer' && bankSection) {
-            bankSection.classList.remove('hidden');
+                if (this.value === 'PromptPay' && qrSection) {
+                    qrSection.classList.remove('hidden');
+                } else if (this.value === 'Bank Transfer' && bankSection) {
+                    bankSection.classList.remove('hidden');
+                }
+            });
         }
-    });
-}
 
 
         
